@@ -1,6 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # 作者:@咔咔龙@zhongerxll@kakadragonn
-# 版本:2.4
+# 版本:2.5
+# 修改者:@纆泽@DeepSeek-R1
 
 export LC_ALL="$(cat /data/data/com.termux/files/usr/glibc/opt/locale.conf)" >/dev/null 2>&1
 
