@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="love.png" alt="Debox OS" width="200" height="200">
+  <img src="love.jpeg" alt="Debox OS" width="200" height="200">
   
   # Debox OS
 
@@ -9,18 +9,18 @@
 
 ## 示例图片
 
-### 示例图片一
+### 容器环境
 
 <div align="center">
-  <img src="example1.jpg" alt="示例图片1" width="600px" height="400px">
-  <p><em>图片1描述文字 - 宽度: 600px, 高度: 400px</em></p>
+  <img src="示例图片1.jpg" alt="debian系统信息" width="600px" height="400px">
+  <p><em>debian系统信息</em></p>
 </div>
 
-### 示例图片二
+### xfce4
 
 <div align="center">
-  <img src="example2.jpg" alt="示例图片2" width="80%" height="auto">
-  <p><em>图片2描述文字 - 宽度: 80%, 高度: 自动</em></p>
+  <img src="示例图片2.jpg" alt="桌面环境" width="80%" height="auto">
+  <p><em>桌面环境</em></p>
 </div>
 
 ### 示例图片三
