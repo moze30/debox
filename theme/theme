@@ -1,1 +1,85 @@
+#!/bin/bash
+#作者:@纆泽@DeepSeek-R1
 
+# 主题配置文件路径
+CONFIG_FILE="/data/data/com.termux/files/usr/change/menu/current_theme"
+
+# 路径定义
+BIN_PATH="/data/data/com.termux/files/usr/bin"
+MENU_PATH="/data/data/com.termux/files/usr/change/menu"
+
+# 记录上一次的主题
+LAST_THEME=""
+
+echo "开始监控主题变化..."
+echo "按 Ctrl+C 停止监控"
+
+# 无限循环，持续监控配置文件变化
+while true; do
+    # 如果配置文件不存在，则使用默认主题（原版）
+    if [ ! -f "$CONFIG_FILE" ]; then
+        CURRENT_THEME="原版"
+    else
+        CURRENT_THEME=$(cat "$CONFIG_FILE")
+    fi
+    
+    # 如果主题发生变化
+    if [ "$CURRENT_THEME" != "$LAST_THEME" ]; then
+        echo "检测到主题变化: $LAST_THEME -> $CURRENT_THEME"
+        
+        # 根据主题选择对应的startonwine文件
+        case $CURRENT_THEME in
+            "原版")
+                SOURCE_FILE="$MENU_PATH/startonwine_original"
+                ;;
+            "纯净白")
+                SOURCE_FILE="$MENU_PATH/startonwine_white"
+                ;;
+            "活力橙")
+                SOURCE_FILE="$MENU_PATH/startonwine_orange"
+                ;;
+            "深空蓝")
+                SOURCE_FILE="$MENU_PATH/startonwine_blue"
+                ;;
+            "森林绿")
+                SOURCE_FILE="$MENU_PATH/startonwine_green"
+                ;;
+            "温柔紫")
+                SOURCE_FILE="$MENU_PATH/startonwine_purple"
+                ;;
+            *)
+                # 默认使用原版
+                SOURCE_FILE="$MENU_PATH/startonwine_original"
+                ;;
+        esac
+        
+        # 检查源文件是否存在
+        if [ ! -f "$SOURCE_FILE" ]; then
+            echo "错误: 对应的startonwine文件不存在: $SOURCE_FILE"
+        else
+            # 目标文件路径
+            TARGET_FILE="$BIN_PATH/startonwine"
+            
+            # 删除原有的startonwine
+            if [ -f "$TARGET_FILE" ]; then
+                rm -f "$TARGET_FILE"
+                echo "已删除原有的startonwine文件"
+            fi
+            
+            # 复制新的startonwine文件
+            cp "$SOURCE_FILE" "$TARGET_FILE"
+            
+            # 添加执行权限
+            chmod +x "$TARGET_FILE"
+            
+            echo "已应用主题: $CURRENT_THEME"
+            echo "已将 $SOURCE_FILE 复制为 $TARGET_FILE 并添加执行权限"
+            
+            # 更新上一次的主题记录
+            LAST_THEME="$CURRENT_THEME"
+        fi
+    fi
+    
+    # 等待一段时间后再次检查（1秒）
+    sleep 1
+done
