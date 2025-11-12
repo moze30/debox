@@ -1,2 +1,2 @@
 # debox
-一个用于在termux上使用kali环境调用mobox的整合系统
+一个用于在termux上使用debian环境调用termux-glibc环境使用box64+wine的组合运行Windows程序的系统。
