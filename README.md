@@ -58,7 +58,7 @@
 ### 4、启动Debox管理器和启动虚拟桌面都需要一到两秒的时间加载和调用，请耐心等待。
 
 ## 开发者名单
-### @纆泽@咔咔龙@Asai@阿飞(afei)@Deemo@Fox
+### [@纆泽](https://github.com/moze30)@咔咔龙[@Asai](https://github.com/as14725836)[@阿飞(afei)](https://github.com/afeimod)@Deemo@Fox
 
 ## 使用到的第三方库
 - [Termux](https://github.com/termux/termux-app)
