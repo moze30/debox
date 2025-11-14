@@ -16,16 +16,13 @@ jobs:
 
     steps:
 
-    # Checkout your repo
     - name: Checkout current repository
-    - uses: actions/checkout@v4
+      uses: actions/checkout@v4
 
-    # Clone Mesa
     - name: Clone Mesa
       run: |
         git clone --depth=1 https://gitlab.freedesktop.org/mesa/mesa.git mesa
 
-    # Install Build Dependencies
     - name: Install dependencies
       run: |
         sudo apt update
@@ -35,7 +32,6 @@ jobs:
           libx11-dev libxext-dev libxdamage-dev libxfixes-dev \
           libdrm-dev libexpat1-dev zlib1g-dev elfutils libelf-dev
 
-    # Create Cross File
     - name: Create cross file
       run: |
         cat > aarch64-termux-glibc.txt <<EOF
@@ -53,19 +49,17 @@ cpu = 'aarch64'
 endian = 'little'
 EOF
 
-    # Build Vulkan Loader
     - name: Build Vulkan Loader
       run: |
         git clone --depth=1 https://github.com/KhronosGroup/Vulkan-Loader.git loader
         cd loader
-        cmake -Bbuild -DCMAKE_BUILD_TYPE=Release \
+        cmake -B build -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++ \
           -DCMAKE_INSTALL_PREFIX=/usr
         cmake --build build -j$(nproc)
         DESTDIR=../install cmake --install build
 
-    # Build Mesa Turnip
     - name: Build Mesa Turnip
       run: |
         meson setup build mesa/ \
@@ -85,4 +79,43 @@ EOF
         meson compile -C build -j$(nproc)
         DESTDIR=install meson install -C build
 
-    # Generate Turnip
+    - name: Generate ICD file
+      run: |
+        mkdir -p install/usr/share/vulkan/icd.d
+        cat > install/usr/share/vulkan/icd.d/turnip_a7xx.json <<EOF
+{
+    "ICD": {
+        "library_path": "libvulkan_freedreno.so",
+        "api_version": "1.3.275"
+    }
+}
+EOF
+
+    - name: Collect dependencies
+      run: |
+        mkdir -p install/usr/lib
+        DRIVER=$(find install -name "libvulkan_freedreno.so*" | head -n 1)
+        echo "Turnip driver: $DRIVER"
+        ldd $DRIVER | grep "=>" | awk '{print $3}' | while read lib; do
+            if [ -f "$lib" ]; then
+                echo "Copy dependency: $lib"
+                cp -v "$lib" install/usr/lib/
+            fi
+        done
+
+    - name: Pack tarball
+      run: |
+        cd install
+        tar -czvf ../${RELEASE_FILE} .
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.ARTIFACT }}
+        path: ${{ env.RELEASE_FILE }}
+
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: ${{ env.RELEASE_FILE }}
