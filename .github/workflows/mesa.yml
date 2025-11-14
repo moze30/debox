@@ -1,99 +1,142 @@
-name: Build Mesa for Adreno 725 (Native ARM)
+name: Build and Release Mesa for Adreno 725
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:  # 手动触发
 
 jobs:
-  build-native-arm:
-    # 使用ARM64 runner
-    runs-on: ubuntu-22.04-arm  # GitHub现在支持ARM64 runners
-    
-    # 或者使用自托管的ARM设备
-    # runs-on: [self-hosted, ARM64]
+  build-mesa:
+    runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout Mesa source
+    - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        repository: mesa3d/mesa
-        fetch-depth: 1
 
-    - name: Install native dependencies
+    - name: Install cross-compilation tools
       run: |
         sudo apt update
         sudo apt install -y \
+          gcc-aarch64-linux-gnu \
+          g++-aarch64-linux-gnu \
           meson \
           ninja-build \
           python3-pip \
-          pkg-config \
-          gcc \
-          g++ \
-          libdrm-dev \
-          libx11-dev \
-          libxext-dev \
-          libxfixes-dev \
-          libxcb1-dev \
-          libx11-xcb-dev \
-          libxcb-dri2-0-dev \
-          libxcb-dri3-dev \
-          libxcb-present-dev \
-          libxcb-sync-dev \
-          libxshmfence-dev \
-          libxxf86vm-dev \
-          libglvnd-dev \
-          libudev-dev \
-          flex \
-          bison \
-          zlib1g-dev \
-          libexpat1-dev
+          pkg-config
 
-    - name: Configure Mesa for Adreno 725 (Native)
+    - name: Clone Mesa source
       run: |
+        git clone --depth=1 https://gitlab.freedesktop.org/mesa/mesa.git
+        cd mesa
+        echo "Mesa version: $(git describe --tags || git rev-parse --short HEAD)"
+
+    - name: Create cross-compilation configuration
+      run: |
+        cd mesa
+        cat > aarch64-cross.txt << 'EOF'
+        [binaries]
+        c = 'aarch64-linux-gnu-gcc'
+        cpp = 'aarch64-linux-gnu-g++'
+        ar = 'aarch64-linux-gnu-ar'
+        strip = 'aarch64-linux-gnu-strip'
+        pkgconfig = 'pkg-config'
+        
+        [host_machine]
+        system = 'linux'
+        cpu_family = 'aarch64'
+        cpu = 'aarch64'
+        endian = 'little'
+        EOF
+
+    - name: Configure Mesa for Adreno 725
+      run: |
+        cd mesa
         meson setup builddir \
+          --cross-file aarch64-cross.txt \
           -Dprefix=/usr \
           -Dsysconfdir=/etc \
           -Dlocalstatedir=/var \
-          -Dgallium-drivers=freedreno,zink,swrast \
+          -Dgallium-drivers=freedreno,swrast \
           -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmd=msm,kgsl \
+          -Dfreedreno-kmd=kgsl \
           -Dglx=disabled \
           -Degl=enabled \
           -Dgbm=enabled \
           -Dgles1=enabled \
           -Dgles2=enabled \
-          -Dplatforms=wayland,drm,surfaceless \
+          -Dplatforms=surfaceless \
           -Dbuildtype=release \
           -Db_lto=true \
+          -Dstrip=true \
           -Dshared-glapi=enabled \
           -Dllvm=disabled \
           -Dvalgrind=disabled
 
     - name: Build Mesa
       run: |
+        cd mesa
+        echo "Starting build..."
         ninja -C builddir -j$(nproc)
+        echo "Build completed!"
 
-    - name: Run tests (optional)
+    - name: Create package structure
       run: |
-        # 运行部分测试确保功能正常
-        meson test -C builddir --suite gallium --timeout-multiplier 2 || true
+        cd mesa
+        mkdir -p ../mesa-package/{lib,include,share}
+        
+        # 复制库文件
+        find builddir -name "*.so*" -exec cp {} ../mesa-package/lib/ \;
+        
+        # 复制重要文件
+        cp -r builddir/include/* ../mesa-package/include/ 2>/dev/null || true
+        
+        # 创建版本信息
+        echo "Mesa for Adreno 725" > ../mesa-package/README.md
+        echo "Built on: $(date)" >> ../mesa-package/README.md
+        echo "Commit: $(git rev-parse HEAD)" >> ../mesa-package/README.md
 
-    - name: Create distribution package
+    - name: Create release archive
       run: |
-        DESTDIR=$(pwd)/install ninja -C builddir install
-        
-        # 保留完整的构建信息
-        mkdir -p mesa-adreno725-native/{lib,etc,share}
-        cp -r install/usr/lib/* mesa-adreno725-native/lib/
-        cp -r install/etc/* mesa-adreno725-native/etc/ 2>/dev/null || true
-        cp -r install/usr/share/* mesa-adreno725-native/share/ 2>/dev/null || true
-        
-        tar -czf mesa-adreno725-native-aarch64.tar.gz mesa-adreno725-native
+        tar -czf mesa-adreno725-aarch64.tar.gz mesa-package
+        zip -r mesa-adreno725-aarch64.zip mesa-package
 
-    - name: Upload artifacts
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: mesa-adreno725-native-aarch64
-        path: mesa-adreno725-native-aarch64.tar.gz
+        name: mesa-adreno725-build
+        path: |
+          mesa-adreno725-aarch64.tar.gz
+          mesa-adreno725-aarch64.zip
+
+    - name: Create GitHub Release
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: mesa-adreno725-${{ github.run_number }}
+        name: Mesa for Adreno 725 Build ${{ github.run_number }}
+        body: |
+          Automated build of Mesa for Adreno 725 GPU
+          
+          ## Build Information
+          - Architecture: AArch64 (ARM64)
+          - Target GPU: Adreno 725
+          - Build Date: ${{ github.event.created_at || '' }}
+          - Commit: ${{ github.sha }}
+          
+          ## Included Components
+          - Gallium drivers: freedreno, swrast
+          - Vulkan drivers: freedreno
+          - EGL support enabled
+          - GLES1/GLES2 support enabled
+          
+          ## Usage
+          Extract the archive and copy libraries to your target device.
+        files: |
+          mesa-adreno725-aarch64.tar.gz
+          mesa-adreno725-aarch64.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
