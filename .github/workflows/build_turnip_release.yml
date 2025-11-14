@@ -1,4 +1,4 @@
-name: Build Mesa Turnip for Adreno 725 (Auto Release)
+name: Build Mesa Turnip for A725
 
 on:
   workflow_dispatch:
@@ -15,44 +15,62 @@ jobs:
       RELEASE_FILE: mesa-turnip-a725.tar.gz
 
     steps:
+
+    # Checkout your repo
     - name: Checkout current repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Clone Mesa from GitLab
-      run: git clone --depth=1 https://gitlab.freedesktop.org/mesa/mesa.git mesa
+    # Clone Mesa
+    - name: Clone Mesa
+      run: |
+        git clone --depth=1 https://gitlab.freedesktop.org/mesa/mesa.git mesa
 
+    # Install Build Dependencies
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y \
-          build-essential meson ninja-build cmake git python3-mako pkg-config \
-          bison flex python3-jinja2 python3-ply \
-          gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-          crossbuild-essential-arm64
+          ninja-build python3-mako python3-pip python3-setuptools \
+          python3-wheel llvm clang lld meson cmake git pkg-config \
+          libx11-dev libxext-dev libxdamage-dev libxfixes-dev \
+          libdrm-dev libexpat1-dev zlib1g-dev elfutils libelf-dev
 
+    # Create Cross File
     - name: Create cross file
       run: |
-        cat > aarch64-termux-glibc.txt <<'EOF'
-        [binaries]
-        c = 'aarch64-linux-gnu-gcc'
-        cpp = 'aarch64-linux-gnu-g++'
-        ar = 'aarch64-linux-gnu-ar'
-        strip = 'aarch64-linux-gnu-strip'
+        cat > aarch64-termux-glibc.txt <<EOF
+[binaries]
+c = 'clang'
+cpp = 'clang++'
+ar = 'llvm-ar'
+strip = 'llvm-strip'
+pkgconfig = 'pkg-config'
 
-        [host_machine]
-        system = 'linux'
-        cpu_family = 'aarch64'
-        cpu = 'armv8'
-        endian = 'little'
+[host_machine]
+system = 'linux'
+cpu_family = 'aarch64'
+cpu = 'aarch64'
+endian = 'little'
+EOF
 
-        [properties]
-        needs_exe_wrapper = true
-        EOF
-
-    - name: Configure Mesa
+    # Build Vulkan Loader
+    - name: Build Vulkan Loader
       run: |
-        meson setup build \
+        git clone --depth=1 https://github.com/KhronosGroup/Vulkan-Loader.git loader
+        cd loader
+        cmake -Bbuild -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_COMPILER=clang \
+          -DCMAKE_CXX_COMPILER=clang++ \
+          -DCMAKE_INSTALL_PREFIX=/usr
+        cmake --build build -j$(nproc)
+        DESTDIR=../install cmake --install build
+
+    # Build Mesa Turnip
+    - name: Build Mesa Turnip
+      run: |
+        meson setup build mesa/ \
           --cross-file aarch64-termux-glibc.txt \
+          -Dbuildtype=release \
           -Dvulkan-drivers=freedreno \
           -Dgallium-drivers=[] \
           -Dplatforms=surfaceless \
@@ -62,37 +80,9 @@ jobs:
           -Dglx=disabled \
           -Degl=disabled \
           -Dmicrosoft-clc=disabled \
-          -Dbuild-tests=false \
-          mesa/
+          -Dbuild-tests=false
 
-    - name: Build Mesa Turnip
-      run: ninja -C build
+        meson compile -C build -j$(nproc)
+        DESTDIR=install meson install -C build
 
-    - name: Package tar.gz
-      run: |
-        mkdir -p output
-        cp build/src/freedreno/vulkan/libvulkan_freedreno.so output/
-        cat > output/turnip.json <<EOF
-        {
-          "file_format_version": "1.0.0",
-          "ICD": {
-            "library_path": "libvulkan_freedreno.so",
-            "api_version": "1.3.0"
-          }
-        }
-        EOF
-        tar -czvf ${{ env.RELEASE_FILE }} -C output .
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.ARTIFACT }}
-        path: ${{ env.RELEASE_FILE }}
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: ${{ env.RELEASE_FILE }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Generate Turnip
