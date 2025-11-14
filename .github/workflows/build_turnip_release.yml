@@ -15,16 +15,12 @@ jobs:
       RELEASE_FILE: mesa-turnip-a725.tar.gz
 
     steps:
-    # 1. Checkout your repository (moze30/debox)
     - name: Checkout current repository
       uses: actions/checkout@v4
 
-    # 2. Clone Mesa from GitLab (official source)
     - name: Clone Mesa from GitLab
-      run: |
-        git clone --depth=1 https://gitlab.freedesktop.org/mesa/mesa.git mesa
+      run: git clone --depth=1 https://gitlab.freedesktop.org/mesa/mesa.git mesa
 
-    # 3. Install dependencies
     - name: Install dependencies
       run: |
         sudo apt update
@@ -34,7 +30,6 @@ jobs:
           gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
           crossbuild-essential-arm64
 
-    # 4. Create cross file for aarch64 glibc
     - name: Create cross file
       run: |
         cat > aarch64-termux-glibc.txt <<'EOF'
@@ -54,7 +49,6 @@ jobs:
         needs_exe_wrapper = true
         EOF
 
-    # 5. Configure Mesa (Turnip only)
     - name: Configure Mesa
       run: |
         meson setup build \
@@ -71,11 +65,9 @@ jobs:
           -Dbuild-tests=false \
           mesa/
 
-    # 6. Build
     - name: Build Mesa Turnip
       run: ninja -C build
 
-    # 7. Package tar.gz
     - name: Package tar.gz
       run: |
         mkdir -p output
@@ -91,125 +83,13 @@ jobs:
         EOF
         tar -czvf ${{ env.RELEASE_FILE }} -C output .
 
-    # 8. Upload artifact (debug)
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.ARTIFACT }}
         path: ${{ env.RELEASE_FILE }}
 
-    # 9. Upload to GitHub Release
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: ${{ env.RELEASE_FILE }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}name: Build Mesa Turnip for Adreno 725 (Auto Release)
-
-on:
-  workflow_dispatch:      # 手动触发
-  push:
-    tags:
-      - "v*"              # 推送 tag 时自动发布
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    env:
-      ARTIFACT: mesa-turnip-a725
-      RELEASE_FILE: mesa-turnip-a725.tar.gz
-
-    steps:
-    # 1. Checkout your repository (moze30/debox)
-    - name: Checkout current repository
-      uses: actions/checkout@v4
-
-    # 2. Checkout Mesa source code into mesa/ subdirectory
-    - name: Checkout Mesa source
-      uses: actions/checkout@v4
-      with:
-        repository: mesa3d/mesa
-        fetch-depth: 0
-        path: mesa
-
-    # 3. Install dependencies
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y \
-          build-essential meson ninja-build cmake git python3-mako pkg-config \
-          bison flex python3-jinja2 python3-ply \
-          gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-          crossbuild-essential-arm64
-
-    # 4. Cross compile config for aarch64 glibc
-    - name: Create cross file
-      run: |
-        cat > aarch64-termux-glibc.txt <<'EOF'
-        [binaries]
-        c = 'aarch64-linux-gnu-gcc'
-        cpp = 'aarch64-linux-gnu-g++'
-        ar = 'aarch64-linux-gnu-ar'
-        strip = 'aarch64-linux-gnu-strip'
-
-        [host_machine]
-        system = 'linux'
-        cpu_family = 'aarch64'
-        cpu = 'armv8'
-        endian = 'little'
-
-        [properties]
-        needs_exe_wrapper = true
-        EOF
-
-    # 5. Configure Mesa (Turnip only)
-    - name: Configure Mesa
-      run: |
-        meson setup build \
-          --cross-file aarch64-termux-glibc.txt \
-          -Dvulkan-drivers=freedreno \
-          -Dgallium-drivers=[] \
-          -Dplatforms=surfaceless \
-          -Dfreedreno-kmds=kgsl \
-          -Dfreedreno-targets=a7xx \
-          -Dllvm=false \
-          -Dglx=disabled \
-          -Degl=disabled \
-          -Dmicrosoft-clc=disabled \
-          -Dbuild-tests=false \
-          mesa/
-
-    # 6. Build Turnip
-    - name: Build Mesa Turnip
-      run: ninja -C build
-
-    # 7. Package output
-    - name: Package tar.gz
-      run: |
-        mkdir -p output
-        cp build/src/freedreno/vulkan/libvulkan_freedreno.so output/
-        cat > output/turnip.json <<EOF
-        {
-          "file_format_version": "1.0.0",
-          "ICD": {
-            "library_path": "libvulkan_freedreno.so",
-            "api_version": "1.3.0"
-          }
-        }
-        EOF
-        tar -czvf ${{ env.RELEASE_FILE }} -C output .
-
-    # 8. Upload build artifact for debug
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.ARTIFACT }}
-        path: ${{ env.RELEASE_FILE }}
-
-    # 9. Automatically upload to GitHub Release when tagging
-    - name: Upload to GitHub Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
