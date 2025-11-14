@@ -10,14 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout Mesa
-      uses: actions/checkout@v4
-      with:
-        # 建议使用包含a7xx支持的分支
-        repository: 'https://gitlab.freedesktop.org/mesa/mesa.git'
-        ref: 'main'  # 或特定commit ID
-    
-    - name: Setup build environment
+    - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
@@ -29,9 +22,18 @@ jobs:
           libx11-dev libxext-dev libxdamage-dev libxcb-glx0-dev \
           python3-mako python3-ply \
           flex bison \
-          crossbuild-essential-arm64
+          crossbuild-essential-arm64 git
         
         pip3 install mako meson
+    
+    - name: Clone Mesa repository
+      run: |
+        git clone --depth 1 https://gitlab.freedesktop.org/mesa/mesa.git
+        cd mesa
+        
+        # 可选：切换到特定分支或提交（如果需要最新a7xx支持）
+        # git fetch origin turnip/feature/a7xx-basic-support
+        # git checkout turnip/feature/a7xx-basic-support
     
     - name: Setup ARM64 toolchain
       run: |
@@ -41,15 +43,14 @@ jobs:
           gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
           pkg-config-aarch64-linux-gnu
         
-        # 设置交叉编译环境变量
+        # 设置环境变量
         echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
         echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
         echo "PKG_CONFIG=aarch64-linux-gnu-pkg-config" >> $GITHUB_ENV
     
-    - name: Configure Mesa for Adreno 725
+    - name: Create cross compilation file
       run: |
-        # 创建ARM64交叉编译文件
-        cat > cross_file.txt << EOF
+        cat > mesa/cross_file.txt << EOF
         [binaries]
         c = 'aarch64-linux-gnu-gcc'
         cpp = 'aarch64-linux-gnu-g++'
@@ -66,8 +67,10 @@ jobs:
         [properties]
         needs_exe_wrapper = true
         EOF
-        
-        # 配置Meson构建
+    
+    - name: Configure Mesa for Adreno 725
+      run: |
+        cd mesa
         meson setup builddir/ \
           --cross-file cross_file.txt \
           --buildtype=release \
@@ -76,24 +79,27 @@ jobs:
           -Dvulkan-drivers=swrast,freedreno \
           -Dfreedreno-kmds=msm,drm \
           -Dllvm=enabled \
-          -Dlto=false \  # 禁用LTO提高兼容性[^3^]
-          -Dexplicit_pci_ids="0x7025" \  # Adreno 725 PCI ID
+          -Dlto=false \
+          -Dexplicit_pci_ids="0x7025" \
           -Db_lto=false \
           -Dcpp_rtti=false
     
     - name: Build Mesa
       run: |
+        cd mesa
         ninja -C builddir/
         
-        # 打包
-        cd builddir
-        tar -czf mesa-adreno725-${GITHUB_RUN_NUMBER}.tar.gz \
-          src/gallium/targets/libgl*.so* \
-          src/amd/vulkan/libvulkan*.so* \
-          src/freedreno/vulkan/libvulkan*.so*
+        # 创建输出目录并打包
+        mkdir -p output
+        cp builddir/src/freedreno/vulkan/libvulkan_freedreno.so* output/ 2>/dev/null || true
+        cp builddir/src/amd/vulkan/libvulkan_radeon.so* output/ 2>/dev/null || true
+        cp builddir/src/gallium/targets/dri/*.so* output/ 2>/dev/null || true
+        cp builddir/src/gallium/targets/libgl*.so* output/ 2>/dev/null || true
+        
+        tar -czf mesa-adreno725-${GITHUB_RUN_NUMBER}.tar.gz -C output .
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: mesa-adreno725-build
-        path: builddir/mesa-adreno725-*.tar.gz
+        path: mesa/mesa-adreno725-*.tar.gz
