@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # 手动触发
+  workflow_dispatch:
 
 jobs:
   build-mesa:
@@ -21,10 +21,17 @@ jobs:
         sudo apt install -y \
           gcc-aarch64-linux-gnu \
           g++-aarch64-linux-gnu \
-          meson \
-          ninja-build \
           python3-pip \
           pkg-config
+
+    - name: Upgrade Meson to required version
+      run: |
+        # 卸载系统Meson并安装最新版本
+        sudo apt remove -y meson
+        pip3 install meson
+        pip3 install ninja
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        meson --version
 
     - name: Clone Mesa source
       run: |
@@ -41,7 +48,7 @@ jobs:
         cpp = 'aarch64-linux-gnu-g++'
         ar = 'aarch64-linux-gnu-ar'
         strip = 'aarch64-linux-gnu-strip'
-        pkgconfig = 'pkg-config'
+        pkg-config = 'pkg-config'  # 修复：使用pkg-config而不是pkgconfig
         
         [host_machine]
         system = 'linux'
@@ -77,25 +84,23 @@ jobs:
     - name: Build Mesa
       run: |
         cd mesa
-        echo "Starting build..."
+        echo "Starting build with Meson $(meson --version)..."
         ninja -C builddir -j$(nproc)
         echo "Build completed!"
 
     - name: Create package structure
       run: |
         cd mesa
-        mkdir -p ../mesa-package/{lib,include,share}
+        mkdir -p ../mesa-package/{lib,share}
         
         # 复制库文件
         find builddir -name "*.so*" -exec cp {} ../mesa-package/lib/ \;
         
-        # 复制重要文件
-        cp -r builddir/include/* ../mesa-package/include/ 2>/dev/null || true
-        
         # 创建版本信息
-        echo "Mesa for Adreno 725" > ../mesa-package/README.md
+        echo "# Mesa for Adreno 725" > ../mesa-package/README.md
         echo "Built on: $(date)" >> ../mesa-package/README.md
-        echo "Commit: $(git rev-parse HEAD)" >> ../mesa-package/README.md
+        echo "Mesa commit: $(git rev-parse HEAD)" >> ../mesa-package/README.md
+        echo "Build system: Meson $(meson --version)" >> ../mesa-package/README.md
 
     - name: Create release archive
       run: |
@@ -122,6 +127,7 @@ jobs:
           ## Build Information
           - Architecture: AArch64 (ARM64)
           - Target GPU: Adreno 725
+          - Meson Version: $(meson --version)
           - Build Date: ${{ github.event.created_at || '' }}
           - Commit: ${{ github.sha }}
           
