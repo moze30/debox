@@ -22,7 +22,8 @@ jobs:
           libx11-dev libxext-dev libxdamage-dev libxcb-glx0-dev \
           python3-mako python3-ply \
           flex bison \
-          crossbuild-essential-arm64 git
+          gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+          pkg-config-aarch64-linux-gnu git
         
         pip3 install mako meson
     
@@ -30,23 +31,6 @@ jobs:
       run: |
         git clone --depth 1 https://gitlab.freedesktop.org/mesa/mesa.git
         cd mesa
-        
-        # 可选：切换到特定分支或提交（如果需要最新a7xx支持）
-        # git fetch origin turnip/feature/a7xx-basic-support
-        # git checkout turnip/feature/a7xx-basic-support
-    
-    - name: Setup ARM64 toolchain
-      run: |
-        sudo dpkg --add-architecture arm64
-        sudo apt-get update
-        sudo apt-get install -y \
-          gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-          pkg-config-aarch64-linux-gnu
-        
-        # 设置环境变量
-        echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-        echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
-        echo "PKG_CONFIG=aarch64-linux-gnu-pkg-config" >> $GITHUB_ENV
     
     - name: Create cross compilation file
       run: |
@@ -66,11 +50,19 @@ jobs:
         
         [properties]
         needs_exe_wrapper = true
+        # 设置 pkg-config 搜索路径
+        pkg_config_libdir = '/usr/lib/aarch64-linux-gnu/pkgconfig'
         EOF
     
     - name: Configure Mesa for Adreno 725
       run: |
         cd mesa
+        
+        # 设置交叉编译环境变量
+        export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
+        export PKG_CONFIG_ALLOW_SYSTEM_LIBS=1
+        export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
+        
         meson setup builddir/ \
           --cross-file cross_file.txt \
           --buildtype=release \
