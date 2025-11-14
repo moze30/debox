@@ -56,7 +56,16 @@ jobs:
         endian = 'little'
         EOF
 
-    - name: Configure Mesa for Adreno 725 (Simplified)
+    - name: Check available options first
+      run: |
+        cd mesa
+        echo "Checking available freedreno options:"
+        meson setup builddir-test --cross-file aarch64-cross.txt --dry-run 2>&1 | grep -i freedreno || true
+        echo "All available options:"
+        meson setup builddir-test --cross-file aarch64-cross.txt --help | grep -A5 -B5 freedreno || true
+        rm -rf builddir-test
+
+    - name: Configure Mesa for Adreno 725 (Updated)
       run: |
         cd mesa
         meson setup builddir \
@@ -64,7 +73,6 @@ jobs:
           -Dprefix=/usr/local \
           -Dgallium-drivers=freedreno \
           -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmd=kgsl \
           -Dglx=disabled \
           -Degl=enabled \
           -Dgles2=enabled \
@@ -78,7 +86,7 @@ jobs:
       run: |
         cd mesa
         echo "Starting cross compilation with Meson $(meson --version)..."
-        ninja -C builddir -j2  # 使用较少的线程避免内存不足
+        ninja -C builddir -j2
         echo "Cross compilation completed!"
 
     - name: Verify build results
@@ -87,20 +95,18 @@ jobs:
         echo "Generated libraries:"
         find builddir -name "*.so*" | sort
 
-    - name: Create minimal package
+    - name: Create package
       run: |
         cd mesa
         mkdir -p ../mesa-cross-package/lib
         
-        # 只复制最重要的库文件
-        find builddir -name "libEGL.so*" -exec cp {} ../mesa-cross-package/lib/ \;
-        find builddir -name "libGLESv2.so*" -exec cp {} ../mesa-cross-package/lib/ \;
-        find builddir -name "libvulkan_*freedreno.so*" -exec cp {} ../mesa-cross-package/lib/ \; 2>/dev/null || true
-        find builddir -name "libfreedreno.so*" -exec cp {} ../mesa-cross-package/lib/ \; 2>/dev/null || true
+        # 复制所有生成的库文件
+        find builddir -name "*.so*" -exec cp {} ../mesa-cross-package/lib/ \;
         
-        # 创建简单说明
+        # 创建说明文件
         echo "# Mesa for Adreno 725 (Cross Compiled)" > ../mesa-cross-package/README.md
         echo "Cross compiled for AArch64 on $(date)" >> ../mesa-cross-package/README.md
+        echo "Mesa commit: $(cd mesa && git rev-parse HEAD)" >> ../mesa-cross-package/README.md
 
     - name: Create release archive
       run: |
@@ -125,8 +131,8 @@ jobs:
           ## Build Information
           - Architecture: AArch64 (ARM64) - Cross Compiled
           - Target GPU: Adreno 725
+          - Meson Version: $(meson --version)
           - Build Type: Release
-          - Build Date: $(date)
           
           ## Included Components
           - Freedreno driver for Adreno GPUs
