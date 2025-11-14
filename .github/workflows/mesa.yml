@@ -1,0 +1,99 @@
+name: Build Mesa for Adreno 725 (Native ARM)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-native-arm:
+    # 使用ARM64 runner
+    runs-on: ubuntu-22.04-arm  # GitHub现在支持ARM64 runners
+    
+    # 或者使用自托管的ARM设备
+    # runs-on: [self-hosted, ARM64]
+    
+    steps:
+    - name: Checkout Mesa source
+      uses: actions/checkout@v4
+      with:
+        repository: mesa3d/mesa
+        fetch-depth: 1
+
+    - name: Install native dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          meson \
+          ninja-build \
+          python3-pip \
+          pkg-config \
+          gcc \
+          g++ \
+          libdrm-dev \
+          libx11-dev \
+          libxext-dev \
+          libxfixes-dev \
+          libxcb1-dev \
+          libx11-xcb-dev \
+          libxcb-dri2-0-dev \
+          libxcb-dri3-dev \
+          libxcb-present-dev \
+          libxcb-sync-dev \
+          libxshmfence-dev \
+          libxxf86vm-dev \
+          libglvnd-dev \
+          libudev-dev \
+          flex \
+          bison \
+          zlib1g-dev \
+          libexpat1-dev
+
+    - name: Configure Mesa for Adreno 725 (Native)
+      run: |
+        meson setup builddir \
+          -Dprefix=/usr \
+          -Dsysconfdir=/etc \
+          -Dlocalstatedir=/var \
+          -Dgallium-drivers=freedreno,zink,swrast \
+          -Dvulkan-drivers=freedreno \
+          -Dfreedreno-kmd=msm,kgsl \
+          -Dglx=disabled \
+          -Degl=enabled \
+          -Dgbm=enabled \
+          -Dgles1=enabled \
+          -Dgles2=enabled \
+          -Dplatforms=wayland,drm,surfaceless \
+          -Dbuildtype=release \
+          -Db_lto=true \
+          -Dshared-glapi=enabled \
+          -Dllvm=disabled \
+          -Dvalgrind=disabled
+
+    - name: Build Mesa
+      run: |
+        ninja -C builddir -j$(nproc)
+
+    - name: Run tests (optional)
+      run: |
+        # 运行部分测试确保功能正常
+        meson test -C builddir --suite gallium --timeout-multiplier 2 || true
+
+    - name: Create distribution package
+      run: |
+        DESTDIR=$(pwd)/install ninja -C builddir install
+        
+        # 保留完整的构建信息
+        mkdir -p mesa-adreno725-native/{lib,etc,share}
+        cp -r install/usr/lib/* mesa-adreno725-native/lib/
+        cp -r install/etc/* mesa-adreno725-native/etc/ 2>/dev/null || true
+        cp -r install/usr/share/* mesa-adreno725-native/share/ 2>/dev/null || true
+        
+        tar -czf mesa-adreno725-native-aarch64.tar.gz mesa-adreno725-native
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: mesa-adreno725-native-aarch64
+        path: mesa-adreno725-native-aarch64.tar.gz
