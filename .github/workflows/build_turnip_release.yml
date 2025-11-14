@@ -1,27 +1,33 @@
 name: Build Mesa Turnip for Adreno 725 (Auto Release)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:      # 手动触发
   push:
     tags:
-      - "v*"
+      - "v*"              # 推送 tag 时自动发布
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     env:
-      MESA_REPO: mesa3d/mesa
       ARTIFACT: mesa-turnip-a725
       RELEASE_FILE: mesa-turnip-a725.tar.gz
 
     steps:
-    - name: Checkout Mesa
+    # 1. Checkout your repository (moze30/debox)
+    - name: Checkout current repository
+      uses: actions/checkout@v4
+
+    # 2. Checkout Mesa source code into mesa/ subdirectory
+    - name: Checkout Mesa source
       uses: actions/checkout@v4
       with:
-        repository: ${{ env.MESA_REPO }}
+        repository: mesa3d/mesa
         fetch-depth: 0
+        path: mesa
 
+    # 3. Install dependencies
     - name: Install dependencies
       run: |
         sudo apt update
@@ -31,7 +37,8 @@ jobs:
           gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
           crossbuild-essential-arm64
 
-    - name: Create cross file for aarch64 (glibc)
+    # 4. Cross compile config for aarch64 glibc
+    - name: Create cross file
       run: |
         cat > aarch64-termux-glibc.txt <<'EOF'
         [binaries]
@@ -50,7 +57,8 @@ jobs:
         needs_exe_wrapper = true
         EOF
 
-    - name: Configure Mesa (Turnip only, optimized for A7xx)
+    # 5. Configure Mesa (Turnip only)
+    - name: Configure Mesa
       run: |
         meson setup build \
           --cross-file aarch64-termux-glibc.txt \
@@ -63,11 +71,14 @@ jobs:
           -Dglx=disabled \
           -Degl=disabled \
           -Dmicrosoft-clc=disabled \
-          -Dbuild-tests=false
+          -Dbuild-tests=false \
+          mesa/
 
+    # 6. Build Turnip
     - name: Build Mesa Turnip
       run: ninja -C build
 
+    # 7. Package output
     - name: Package tar.gz
       run: |
         mkdir -p output
@@ -83,13 +94,15 @@ jobs:
         EOF
         tar -czvf ${{ env.RELEASE_FILE }} -C output .
 
-    - name: Upload artifact (for debug)
+    # 8. Upload build artifact for debug
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.ARTIFACT }}
         path: ${{ env.RELEASE_FILE }}
 
-    - name: Create GitHub Release
+    # 9. Automatically upload to GitHub Release when tagging
+    - name: Upload to GitHub Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
