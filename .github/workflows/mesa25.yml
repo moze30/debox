@@ -23,20 +23,19 @@ jobs:
           echo "CPU 信息:"
           lscpu | grep -E 'Model name|Architecture|CPU MHz|Core'
 
-      - name: 安装依赖 (修复缺少 xfixes 的问题)
+      - name: 安装依赖
         run: |
           echo "📦 安装 Mesa 构建依赖..."
           sudo sed -i "s/^Types: deb$/Types: deb deb-src/" /etc/apt/sources.list.d/ubuntu.sources
           sudo apt update
           
-          # === 修复点 ===
-          # 添加了 libxfixes-dev (修复本次报错)
-          # 添加了 libxdamage-dev (预防下一个可能的报错)
+          # 1. 保留了修复 X11 报错的 libxfixes-dev libxdamage-dev
+          # 2. 新增了 valgrind (为了支持您参数中的 -Dvalgrind=enabled)
           sudo apt install -y glslang-tools libxrandr-dev libxxf86vm-dev libxcb-shm0-dev libxcb-glx0-dev \
               libxext-dev llvm-19 libx11-dev libx11-xcb-dev libxcb1-dev libxcb-dri3-dev libxcb-present-dev \
               libxcb-randr0-dev libxcb-sync-dev libxcb-xfixes0-dev libxshmfence-dev libdrm-dev \
               libgbm-dev libegl1-mesa-dev libexpat1-dev libwayland-dev python3-pip \
-              libxfixes-dev libxdamage-dev
+              libxfixes-dev libxdamage-dev valgrind
               
           pip3 install --user meson ninja mako
           echo "✅ 依赖安装完成"
@@ -49,7 +48,6 @@ jobs:
           
           echo "🔀 切换到版本 mesa-25.0.0..."
           git fetch --tags
-          # 确保 tag 存在，不存在则切换失败
           git checkout mesa-25.0.0
 
           echo "🔧 自定义品牌: Turnip → Qualcomm Snapdragon"
@@ -64,51 +62,36 @@ jobs:
         run: |
           cd mesa
           BUILD_START=$(date +%s)
+          # 创建安装目录，确保 packaging 步骤能找到文件
           sudo mkdir -p /data/data/com.termux/files/usr/glibc
           sudo chmod 777 -R /data
 
-          echo "⚙️ 使用 Meson 配置构建..."
-          mkdir -p builddir
+          echo "⚙️ 使用新参数配置构建..."
+          # 使用您指定的目录名 build-freedreno
+          mkdir -p build-freedreno
           
-          # 移除了 -Dmediafoundation-codecs=all (25.0.0 不支持)
-          meson setup builddir \
+          # === 使用您指定的新参数 ===
+          # 保留 prefix 和 libdir 是为了让 install 步骤安装到正确位置供打包
+          meson setup build-freedreno \
             --libdir=lib \
             -Dprefix=/data/data/com.termux/files/usr/glibc \
             -Dbuildtype=release \
-            -Doptimization=3 \
-            -Db_lto=true \
             -Dplatforms=x11 \
-            -Degl-native-platform=x11 \
-            -Dglx=dri \
-            -Dglx-direct=true \
-            -Dopengl=true \
-            -Dgles1=enabled \
-            -Dgles2=enabled \
-            -Dglvnd=disabled \
-            -Degl=enabled \
-            -Dllvm=enabled \
-            -Dshared-llvm=enabled \
-            -Dshader-cache=enabled \
-            -Dxlib-lease=enabled \
-            -Dvulkan-beta=true \
+            -Dgallium-drivers= \
+            -Dvulkan-drivers=freedreno \
             -Dlibunwind=disabled \
-            -Dvalgrind=disabled \
             -Dmicrosoft-clc=disabled \
-            -Dgallium-rusticl=false \
-            -Dgallium-extra-hud=true \
-            -Dgallium-drivers=zink,freedreno,llvmpipe,softpipe \
-            -Dgallium-rusticl-enable-drivers=freedreno \
-            -Dshader-cache-default=true \
-            -Dvulkan-drivers=freedreno,swrast \
-            -Dfreedreno-kmds=msm,kgsl \
+            -Dvalgrind=enabled \
+            -Dfreedreno-kmds=wsl,kgsl,msm \
             -Dvideo-codecs=all \
-            -Dgbm=enabled \
-            -Dtools=drm-shim,freedreno
+            -Dvulkan-beta=true
 
           echo "🧱 开始编译..."
-          ninja -C builddir -j$(nproc)
+          # 注意：这里目录改成了 build-freedreno
+          ninja -C build-freedreno -j$(nproc)
+          
           echo "📦 安装到 glibc 目录..."
-          ninja -C builddir install
+          ninja -C build-freedreno install
 
           BUILD_END=$(date +%s)
           DURATION=$((BUILD_END - BUILD_START))
@@ -127,7 +110,8 @@ jobs:
 
           # === 1️⃣ Vulkan 驱动最小包 ===
           TAR_NAME="termux-glibc-mesa-${VERSION}-aarch64.tar.gz"
-          tar -czvf "../${TAR_NAME}" -C builddir/src/freedreno/vulkan libvulkan_freedreno.so
+          # 目录修正为 build-freedreno
+          tar -czvf "../${TAR_NAME}" -C build-freedreno/src/freedreno/vulkan libvulkan_freedreno.so
 
           # === 2️⃣ 完整 glibc Mesa 环境包 ===
           FULL_TAR="glibc-mesa-${VERSION}-aarch64.tar.gz"
@@ -166,6 +150,7 @@ jobs:
             🔧 **Mesa 手动构建信息**
             - 🧱 版本: **${{ env.VERSION }}**
             - 💡 提交: `${{ env.GIT_HASH }}`
+            - ⚙️ 参数: `platforms=x11`, `vulkan=freedreno`, `gallium=`
             - 📦 产物列表:
               - `${{ env.TAR_NAME }}`
               - `${{ env.FULL_TAR }}`
