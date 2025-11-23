@@ -23,15 +23,21 @@ jobs:
           echo "CPU 信息:"
           lscpu | grep -E 'Model name|Architecture|CPU MHz|Core'
 
-      - name: 安装依赖
+      - name: 安装依赖 (修复缺少 xfixes 的问题)
         run: |
           echo "📦 安装 Mesa 构建依赖..."
           sudo sed -i "s/^Types: deb$/Types: deb deb-src/" /etc/apt/sources.list.d/ubuntu.sources
           sudo apt update
+          
+          # === 修复点 ===
+          # 添加了 libxfixes-dev (修复本次报错)
+          # 添加了 libxdamage-dev (预防下一个可能的报错)
           sudo apt install -y glslang-tools libxrandr-dev libxxf86vm-dev libxcb-shm0-dev libxcb-glx0-dev \
               libxext-dev llvm-19 libx11-dev libx11-xcb-dev libxcb1-dev libxcb-dri3-dev libxcb-present-dev \
               libxcb-randr0-dev libxcb-sync-dev libxcb-xfixes0-dev libxshmfence-dev libdrm-dev \
-              libgbm-dev libegl1-mesa-dev libexpat1-dev libwayland-dev python3-pip
+              libgbm-dev libegl1-mesa-dev libexpat1-dev libwayland-dev python3-pip \
+              libxfixes-dev libxdamage-dev
+              
           pip3 install --user meson ninja mako
           echo "✅ 依赖安装完成"
 
@@ -43,8 +49,7 @@ jobs:
           
           echo "🔀 切换到版本 mesa-25.0.0..."
           git fetch --tags
-          # 注意：请确保 mesa-25.0.0 标签存在。如果不存在，脚本会在下一步构建时失败或构建默认分支
-          # 如果你是想构建 24.3.x 或其他正式版，请修改此处
+          # 确保 tag 存在，不存在则切换失败
           git checkout mesa-25.0.0
 
           echo "🔧 自定义品牌: Turnip → Qualcomm Snapdragon"
@@ -65,8 +70,7 @@ jobs:
           echo "⚙️ 使用 Meson 配置构建..."
           mkdir -p builddir
           
-          # === 修复说明 ===
-          # 移除了 -Dmediafoundation-codecs=all 以修复 25.0.0 的构建错误
+          # 移除了 -Dmediafoundation-codecs=all (25.0.0 不支持)
           meson setup builddir \
             --libdir=lib \
             -Dprefix=/data/data/com.termux/files/usr/glibc \
