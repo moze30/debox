@@ -1,7 +1,6 @@
 name: 稳定版 Mesa (aarch64, Manual Build 25.0.0)
 
 on:
-  # 仅保留手动触发
   workflow_dispatch:
 
 permissions:
@@ -10,7 +9,6 @@ permissions:
 
 jobs:
   build:
-    # 移除了 needs 和 if 条件，手动触发后直接运行
     runs-on: ubuntu-24.04-arm
 
     steps:
@@ -24,10 +22,6 @@ jobs:
           uname -a
           echo "CPU 信息:"
           lscpu | grep -E 'Model name|Architecture|CPU MHz|Core'
-          echo "内存使用情况:"
-          free -h
-          echo "磁盘空间:"
-          df -h
 
       - name: 安装依赖
         run: |
@@ -49,8 +43,8 @@ jobs:
           
           echo "🔀 切换到版本 mesa-25.0.0..."
           git fetch --tags
-          # 这里强制检出 mesa-25.0.0 标签
-          # 如果 25.0.0 尚未正式发布，可能需要改为 mesa-25.0.0-rc1 或分支 25.0
+          # 注意：请确保 mesa-25.0.0 标签存在。如果不存在，脚本会在下一步构建时失败或构建默认分支
+          # 如果你是想构建 24.3.x 或其他正式版，请修改此处
           git checkout mesa-25.0.0
 
           echo "🔧 自定义品牌: Turnip → Qualcomm Snapdragon"
@@ -70,6 +64,9 @@ jobs:
 
           echo "⚙️ 使用 Meson 配置构建..."
           mkdir -p builddir
+          
+          # === 修复说明 ===
+          # 移除了 -Dmediafoundation-codecs=all 以修复 25.0.0 的构建错误
           meson setup builddir \
             --libdir=lib \
             -Dprefix=/data/data/com.termux/files/usr/glibc \
@@ -101,7 +98,6 @@ jobs:
             -Dvulkan-drivers=freedreno,swrast \
             -Dfreedreno-kmds=msm,kgsl \
             -Dvideo-codecs=all \
-            -Dmediafoundation-codecs=all \
             -Dgbm=enabled \
             -Dtools=drm-shim,freedreno
 
