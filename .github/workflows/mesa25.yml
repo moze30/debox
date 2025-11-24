@@ -1,4 +1,4 @@
-Name: 稳定版 Mesa (aarch64, Ubuntu 22.04 Build)
+name: 稳定版 Mesa (aarch64, Ubuntu 22.04 Build)
 
 on:
   workflow_dispatch:
