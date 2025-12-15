@@ -1,0 +1,64 @@
+name: 简化版 Mesa 构建
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 搭建编译环境
+        run: |
+          sudo apt update
+          sudo apt install -y glslang-tools libxrandr-dev libxxf86vm-dev libxcb-shm0-dev libxcb-glx0-dev \
+              libxext-dev llvm-19 libx11-dev libx11-xcb-dev libxcb1-dev libxcb-dri3-dev libxcb-present-dev \
+              libxcb-randr0-dev libxcb-sync-dev libxcb-xfixes0-dev libxshmfence-dev libdrm-dev \
+              libgbm-dev libegl1-mesa-dev libexpat1-dev libwayland-dev python3-pip
+          pip3 install --user meson ninja mako
+
+      - name: 克隆源码
+        run: |
+          git clone https://gitlab.freedesktop.org/mesa/mesa.git
+          cd mesa
+          git checkout main
+
+      - name: 配置并编译
+        run: |
+          cd mesa
+          sudo mkdir -p /bianyi/mesa
+          sudo chmod 777 /bianyi
+          
+          mkdir -p build
+          meson setup build --prefix=/bianyi/mesa --libdir=lib --buildtype=release -Dplatforms=x11 -Degl=enabled -Dgbm=enabled -Dopengl=true -Dgles1=enabled -Dgles2=enabled -Dglx=dri -Dglx-direct=true -Dglvnd=disabled -Dshared-glapi=enabled -Dxlib-lease=enabled -Dllvm=enabled -Dshared-llvm=enabled -Dvulkan=enabled -Dvulkan-beta=true -Dvulkan-drivers=freedreno,swrast -Dzink=enabled -Dgallium-drivers=freedreno,zink,llvmpipe,softpipe -Dfreedreno-kmds=msm,kgsl -Dshader-cache=enabled -Dshader-cache-default=true -Dlibunwind=disabled -Dvalgrind=disabled -Dmicrosoft-clc=disabled -Dgallium-rusticl=false -Dtools=drm-shim,freedreno,zink
+          
+          ninja -C build -j$(nproc)
+          ninja -C build install
+
+      - name: 打包
+        run: |
+          cd mesa
+          VERSION=$(cat VERSION)
+          GIT_HASH=$(git rev-parse --short HEAD)
+          
+          tar -czvf "mesa-${VERSION}-aarch64.tar.gz" -C /bianyi mesa
+          
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
+
+      - name: 发布到 GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: mesa-${{ env.VERSION }}
+          name: Mesa ${{ env.VERSION }} (aarch64)
+          body: |
+            手动构建的 Mesa 驱动
+            版本: ${{ env.VERSION }}
+            提交: ${{ env.GIT_HASH }}
+            安装路径: /bianyi/mesa
+          files: |
+            mesa/mesa-${{ env.VERSION }}-aarch64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
