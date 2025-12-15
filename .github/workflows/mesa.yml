@@ -28,14 +28,14 @@ jobs:
       - name: 配置并编译
         run: |
           cd mesa
-          sudo mkdir -p /bianyi/mesa
-          sudo chmod 777 /bianyi
+          sudo mkdir -p /data/bianyi/mesa
+          sudo chmod 777 /data
           
-          mkdir -p builddir
-          meson setup builddir --prefix=/bianyi/mesa --libdir=lib --buildtype=release -Dplatforms=x11 -Degl=enabled -Dgbm=enabled -Dopengl=true -Dgles1=enabled -Dgles2=enabled -Dglx=dri -Dglx-direct=true -Dglvnd=disabled -Dxlib-lease=enabled -Dllvm=enabled -Dshared-llvm=enabled -Dvulkan-drivers=freedreno,swrast -Dgallium-drivers=freedreno,zink,llvmpipe,softpipe -Dfreedreno-kmds=msm,kgsl -Dshader-cache=enabled -Dshader-cache-default=true -Dlibunwind=disabled -Dvalgrind=disabled -Dmicrosoft-clc=disabled -Dgallium-rusticl=false -Dtools=drm-shim,freedreno
+          mkdir -p build
+          meson setup build --prefix=/bianyi/mesa --libdir=lib --buildtype=release -Dplatforms=x11 -Degl=enabled -Dgbm=enabled -Dopengl=true -Dgles1=enabled -Dgles2=enabled -Dglx=dri -Dglx-direct=true -Dglvnd=disabled -Dxlib-lease=enabled -Dllvm=enabled -Dshared-llvm=enabled -Dvulkan-drivers=freedreno,swrast -Dgallium-drivers=freedreno,zink,llvmpipe,softpipe -Dfreedreno-kmds=msm,kgsl -Dshader-cache=enabled -Dshader-cache-default=true -Dlibunwind=disabled -Dvalgrind=disabled -Dmicrosoft-clc=disabled -Dgallium-rusticl=false -Dtools=drm-shim,freedreno
           
-          ninja -C builddir -j$(nproc)
-          ninja -C builddir install
+          ninja -C build -j$(nproc)
+          ninja -C build install
 
       - name: 打包
         run: |
@@ -43,7 +43,7 @@ jobs:
           VERSION=$(cat VERSION)
           GIT_HASH=$(git rev-parse --short HEAD)
           
-          tar -czvf "mesa-${VERSION}-aarch64.tar.gz" -C /bianyi mesa
+          tar -czvf "mesa-${VERSION}-aarch64.tar.gz" -C /data/bianyi mesa
           
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
