@@ -32,7 +32,7 @@ jobs:
           sudo chmod 777 /bianyi
           
           mkdir -p build
-          meson setup build --prefix=/bianyi/mesa --libdir=lib --buildtype=release -Dplatforms=x11 -Degl=enabled -Dgbm=enabled -Dopengl=true -Dgles1=enabled -Dgles2=enabled -Dglx=dri -Dglx-direct=true -Dglvnd=disabled -Dshared-glapi=enabled -Dxlib-lease=enabled -Dllvm=enabled -Dshared-llvm=enabled -Dvulkan=enabled -Dvulkan-beta=true -Dvulkan-drivers=freedreno,swrast -Dzink=enabled -Dgallium-drivers=freedreno,zink,llvmpipe,softpipe -Dfreedreno-kmds=msm,kgsl -Dshader-cache=enabled -Dshader-cache-default=true -Dlibunwind=disabled -Dvalgrind=disabled -Dmicrosoft-clc=disabled -Dgallium-rusticl=false -Dtools=drm-shim,freedreno,zink
+          meson setup builddir --prefix=/bianyi/mesa --libdir=lib --buildtype=release -Dplatforms=x11 -Degl=enabled -Dgbm=enabled -Dopengl=true -Dgles1=enabled -Dgles2=enabled -Dglx=dri -Dglx-direct=true -Dglvnd=disabled -Dxlib-lease=enabled -Dllvm=enabled -Dshared-llvm=enabled -Dvulkan-drivers=freedreno,swrast -Dzink=enabled -Dgallium-drivers=freedreno,zink,llvmpipe,softpipe -Dfreedreno-kmds=msm,kgsl -Dshader-cache=enabled -Dshader-cache-default=true -Dlibunwind=disabled -Dvalgrind=disabled -Dmicrosoft-clc=disabled -Dgallium-rusticl=false -Dtools=drm-shim,freedreno,zink
           
           ninja -C build -j$(nproc)
           ninja -C build install
@@ -61,4 +61,4 @@ jobs:
           files: |
             mesa/mesa-${{ env.VERSION }}-aarch64.tar.gz
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}}
