@@ -46,31 +46,30 @@ jobs:
           mkdir -p build
 
           meson setup build \
-  --prefix=/opt/mesa \
-  --libdir=lib \
-  --buildtype=release \
-  -Dplatforms=x11 \
-  -Degl=enabled \
-  -Dgbm=enabled \
-  -Dopengl=true \
-  -Dgles1=enabled \
-  -Dgles2=enabled \
-  -Dglx=dri \
-  -Dglx-direct=true \
-  -Dglvnd=disabled \
-  -Dxlib-lease=enabled \
-  -Dllvm=enabled \
-  -Dshared-llvm=enabled \
-  -Dvulkan-drivers=freedreno,swrast \
-  -Dgallium-drivers=freedreno,zink,llvmpipe,softpipe \
-  -Dfreedreno-kmds=msm,kgsl \
-  -Dshader-cache=enabled \
-  -Dshader-cache-default=true \
-  -Dlibunwind=disabled \
-  -Dvalgrind=disabled \
-  -Dmicrosoft-clc=disabled \
-  -Dgallium-rusticl=false \
-  -Dtools=drm-shim,freedreno
+            --prefix=/opt/mesa \
+            --libdir=lib \
+            -Dbuildtype=release \
+            -Dplatforms=x11 \
+            -Degl-native-platform=x11 \
+            -Degl=enabled \
+            -Dgbm=enabled \
+            -Dopengl=true \
+            -Dgles2=enabled \
+            -Dglx=dri \
+            -Dglx-direct=true \
+            -Dglvnd=disabled \
+            -Dxlib-lease=enabled \
+            -Dllvm=enabled \
+            -Dshader-cache=enabled \
+            -Dshader-cache-default=true \
+            -Dgallium-drivers=freedreno,zink,llvmpipe,softpipe \
+            -Dfreedreno-kmds=msm \
+            -Dvulkan-drivers=freedreno,swrast \
+            -Dgallium-rusticl=false \
+            -Dlibunwind=disabled \
+            -Dvalgrind=disabled \
+            -Dmicrosoft-clc=disabled \
+            -Dtools=drm-shim,freedreno
 
       - name: 编译 Mesa
         run: |
