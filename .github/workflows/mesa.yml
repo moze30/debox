@@ -3,6 +3,9 @@ name: Mesa aarch64 (Vulkan + Zink + Freedreno)
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
