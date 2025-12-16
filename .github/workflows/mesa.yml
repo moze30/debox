@@ -29,7 +29,8 @@ jobs:
             libxshmfence-dev \
             libwayland-dev \
             libexpat1-dev \
-            python3-pip
+            python3-pip \
+            libglvnd-dev
 
           pip3 install --user meson ninja mako
 
