@@ -45,7 +45,7 @@ jobs:
 
           mkdir -p build
 
-          meson setup build -D prefix=/opt/mesa -D buildtype=release -D dri3=enabled -D egl=enabled -D platforms=x11 -D gallium-drivers=swrast,virgl,zink,freedreno -D vulkan-drivers=freedreno -D opengl=false -D glx=disabled -D osmesa=true -D gles1=disabled -D gles2=enabled -D glvnd=true -D libunwind=disabled -D shared-glapi=enabled -D microsoft-clc=disabled -D valgrind=disabled -D freedreno-kmds=kgsl
+          meson setup build -D prefix=/opt/mesa -D buildtype=release -D -D egl=enabled -D platforms=x11 -D gallium-drivers=swrast,virgl,zink,freedreno -D vulkan-drivers=freedreno -D opengl=false -D glx=disabled -D osmesa=true -D gles1=disabled -D gles2=enabled -D glvnd=true -D libunwind=disabled -D shared-glapi=enabled -D microsoft-clc=disabled -D valgrind=disabled -D freedreno-kmds=kgsl
 
       - name: 编译 Mesa
         run: |
