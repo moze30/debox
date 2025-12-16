@@ -46,7 +46,7 @@ jobs:
 
           mkdir -p build
 
-          meson setup build --prefix=/opt/mesa --libdir=lib -Dbuildtype=release -Dplatforms=x11 -Dgallium-drivers=freedreno,zink,virgl,llvmpipe -Dvulkan-drivers=freedreno,swrast -Degl=enabled -Dgles2=enabled -Dgles1=disabled -Dglvnd=enabled -Dglx=dri -Dfreedreno-kmds=kgsl -Dlibunwind=disabled -Dmicrosoft-clc=disabled -Dvalgrind=disabled
+          meson setup build --prefix=/opt/mesa --libdir=lib/aarch64-linux-gnu -Dbuildtype=release -Dplatforms=x11 -Dgallium-drivers=freedreno,zink,virgl,llvmpipe -Dvulkan-drivers=freedreno,swrast -Degl=enabled -Dgles2=enabled -Dgles1=disabled -Dglvnd=enabled -Dglx=dri -Dfreedreno-kmds=kgsl -Dlibunwind=disabled -Dmicrosoft-clc=disabled -Dvalgrind=disabled
      
       - name: 编译 Mesa
         run: |
