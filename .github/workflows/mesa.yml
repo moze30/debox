@@ -36,7 +36,7 @@ jobs:
 
       - name: 克隆 Mesa 源码
         run: |
-          git clone https://gitlab.freedesktop.org/mesa/mesa.git
+          git clone https://github.com/lfdevs/mesa-for-android-container.git mesa
           cd mesa
           git checkout main
 
