@@ -38,7 +38,7 @@ jobs:
         run: |
           git clone https://gitlab.freedesktop.org/mesa/mesa.git
           cd mesa
-          git checkout adreno-main
+          git checkout main
 
       - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）
         run: |
