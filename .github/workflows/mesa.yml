@@ -48,8 +48,8 @@ jobs:
 
           mkdir -p build
           meson setup build \
-          --prefix=/data/data/com.termux/files/usr/glibc \
-          --libdir=lib \
+          --prefix=/opt/mwsa \
+          --libdir=lib/aarch64-linux-gnu \
           -Doptimization=3 \
           -Db_lto=true \
           -Dplatforms=x11,wayland \
@@ -90,7 +90,7 @@ jobs:
           VERSION=$(cat VERSION)
           GIT_HASH=$(git rev-parse --short HEAD)
 
-          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package data
+          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt
 
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
