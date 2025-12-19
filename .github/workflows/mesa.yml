@@ -36,7 +36,7 @@ jobs:
 
       - name: 克隆 Mesa 源码
         run: |
-          git clone https://github.com/lfdevs/mesa-for-android-container.git mesa
+          git clone https://gitlab.freedesktop.org/mesa/mesa.git
           cd mesa
           git checkout adreno-main
 
@@ -46,8 +46,30 @@ jobs:
 
           mkdir -p build
 
-          meson setup build --prefix=/opt/mesa --libdir=lib/aarch64-linux-gnu -Dbuildtype=release -Dplatforms=x11 -Dgallium-drivers=freedreno,zink,virgl,llvmpipe -Dvulkan-drivers=freedreno,swrast -Degl=enabled -Dgles2=enabled -Dgles1=disabled -Dglvnd=enabled -Dglx=dri -Dfreedreno-kmds=kgsl -Dlibunwind=disabled -Dmicrosoft-clc=disabled -Dvalgrind=disabled
-     
+          meson setup build \
+          -Dprefix=/data/data/com.termux/files/usr/glibc \
+          -libdir=lib \
+          -Dplatforms=x11,wayland \
+          -Degl-native-platform=x11 \
+          -Dgallium-drivers=zink,llvmpipe \
+          -Dmediafoundation-codecs=all \
+          -Dvulkan-drivers=freedreno,swrast \
+          -Dfreedreno-kmds=msm \
+          -Dgles1=enabled \
+          -Dgles2=enabled \
+          -Dopengl=true \
+          -Dgbm=enabled \
+          -Dglx=dri \
+          -Degl=enabled \
+          -Dtools=zink,freedreno \
+          -Dvideo-codecs=all \
+          -Dllvm=enabled \
+          -Dshared-llvm=enabled
+          
+          
+          
+          
+          
       - name: 编译 Mesa
         run: |
           cd mesa
