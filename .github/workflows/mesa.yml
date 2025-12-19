@@ -63,7 +63,7 @@ jobs:
           -Dgles2=enabled \
           -Dopengl=true \
           -Dgbm=enabled \
-          -Dglx=dri \
+          -Dglx=disabled \
           -Degl=enabled \
           -Dtools=zink,freedreno \
           -Dvideo-codecs=all \
