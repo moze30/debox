@@ -51,6 +51,8 @@ jobs:
           meson setup build \
           --prefix=/data/data/com.termux/files/usr/glibc \
           --libdir=lib \
+          -Doptimization=3 \
+          -Db_lto=true \
           -Dplatforms=x11,wayland \
           -Degl-native-platform=x11 \
           -Dgallium-drivers=zink,llvmpipe \
@@ -66,7 +68,11 @@ jobs:
           -Dtools=zink,freedreno \
           -Dvideo-codecs=all \
           -Dllvm=enabled \
-          -Dshared-llvm=enabled
+          -Dshared-llvm=enabled \
+          -Dvalgrind=disabled \
+          -Dlibunwind=disabled \
+          -Dshader-cache=enabled \
+          -Dshader-cache-default=true
           
           
           
@@ -88,7 +94,7 @@ jobs:
           VERSION=$(cat VERSION)
           GIT_HASH=$(git rev-parse --short HEAD)
 
-          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt
+          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package data
 
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
@@ -104,7 +110,7 @@ jobs:
             版本: ${{ env.VERSION }}
             提交: ${{ env.GIT_HASH }}
 
-            安装前缀: /opt/mesa
+            安装前缀: /data/data/com.termux/files/usr/glibc
             通过 DESTDIR 打包，适用于 proot / Termux / chroot
           files: |
             mesa/mesa-${{ env.VERSION }}-aarch64.tar.gz
