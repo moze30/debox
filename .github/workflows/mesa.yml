@@ -55,7 +55,7 @@ jobs:
           -Db_lto=true \
           -Dplatforms=x11,wayland \
           -Degl-native-platform=x11 \
-          -Dgallium-drivers=zink,llvmpipe \
+          -Dgallium-drivers=freedreno,zink,llvmpipe \
           -Dmediafoundation-codecs=all \
           -Dvulkan-drivers=freedreno,swrast \
           -Dfreedreno-kmds=msm \
