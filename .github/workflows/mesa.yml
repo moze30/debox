@@ -48,7 +48,7 @@ jobs:
 
           mkdir -p build
           meson setup build \
-          --prefix=/opt/mwsa \
+          --prefix=/opt/mesa \
           --libdir=lib/aarch64-linux-gnu \
           -Doptimization=3 \
           -Db_lto=true \
