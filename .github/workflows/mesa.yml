@@ -47,8 +47,8 @@ jobs:
           mkdir -p build
 
           meson setup build \
-          -Dprefix=/data/data/com.termux/files/usr/glibc \
-          -libdir=lib \
+          --prefix=/data/data/com.termux/files/usr/glibc \
+          --libdir=lib \
           -Dplatforms=x11,wayland \
           -Degl-native-platform=x11 \
           -Dgallium-drivers=zink,llvmpipe \
