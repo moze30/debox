@@ -51,26 +51,30 @@ jobs:
           --prefix=/opt/mesa \
           -Doptimization=3 \
           -Db_lto=true \
+          -Dllvm=enabled \
+          -Dshared-llvm=enabled \
+          -Dvalgrind=disabled \
+          -Dlibunwind=disabled \
+          -Dshader-cache=enabled \
+          -Dshader-cache-default=true \
           -Dplatforms=x11 \
           -Degl-native-platform=x11 \
-          -Dgallium-drivers=freedreno,llvmpipe \
+          -Dgallium-drivers=freedreno,zink \
+          -Dgallium-rusticl-enable-drivers=freedreno \
           -Dmediafoundation-codecs=all \
           -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmds=msm \
+          -Dfreedreno-kmds=kgsl \
           -Dgles1=enabled \
           -Dgles2=enabled \
           -Dopengl=true \
           -Dgbm=enabled \
           -Dglx=disabled \
           -Degl=enabled \
-          -Dvideo-codecs=all \
-          -Dllvm=enabled \
-          -Dshared-llvm=enabled \
-          -Dvalgrind=disabled \
-          -Dlibunwind=disabled \
-          -Dshader-cache=enabled \
-          -Dshader-cache-default=true
-          
+          -Dglvnd=enabled \
+          -Dtools=freedreno,zink \
+          -Dglx-direct=true \
+          -Dvideo-codecs=all
+        
           
       - name: 编译 Mesa
         run: |
