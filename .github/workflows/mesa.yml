@@ -52,11 +52,11 @@ jobs:
           --libdir=lib/aarch64-linux-gnu \
           -Doptimization=3 \
           -Db_lto=true \
-          -Dplatforms=x11,wayland \
+          -Dplatforms=x11 \
           -Degl-native-platform=x11 \
           -Dgallium-drivers=zink,freedreno,llvmpipe \
           -Dmediafoundation-codecs=all \
-          -Dvulkan-drivers=freedreno,swrast \
+          -Dvulkan-drivers=freedreno \
           -Dfreedreno-kmds=kgsl \
           -Dgles1=enabled \
           -Dgles2=enabled \
@@ -64,7 +64,6 @@ jobs:
           -Dgbm=enabled \
           -Dglx=disabled \
           -Degl=enabled \
-          -Dtools=freedreno \
           -Dvideo-codecs=all \
           -Dllvm=enabled \
           -Dshared-llvm=enabled \
