@@ -56,7 +56,7 @@ jobs:
           -Dgallium-drivers=freedreno,llvmpipe \
           -Dmediafoundation-codecs=all \
           -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmds=kgsl \
+          -Dfreedreno-kmds=msm \
           -Dgles1=enabled \
           -Dgles2=enabled \
           -Dopengl=true \
