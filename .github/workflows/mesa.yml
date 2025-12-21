@@ -11,10 +11,16 @@ jobs:
     runs-on: ubuntu-24.04-arm
 
     steps:
-      - name: 检出仓库
+      # ------------------------------------------------------------
+      # 1. Checkout 当前仓库（只是为了 workflow 本身）
+      # ------------------------------------------------------------
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: 安装依赖
+      # ------------------------------------------------------------
+      # 2. 安装构建依赖
+      # ------------------------------------------------------------
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y \
@@ -29,38 +35,70 @@ jobs:
             libxshmfence-dev \
             libwayland-dev \
             libexpat1-dev \
-            python3-pip \
             libglvnd-dev \
-            libwayland-egl-backend-dev \
-            libvulkan-dev
+            libvulkan-dev \
+            python3-pip
 
           pip3 install --user meson ninja mako
 
-      # ① 克隆 Mesa（固定一个稳定分支，别用 main）
-      - name: 克隆 Mesa 源码
+      # ------------------------------------------------------------
+      # 3. 克隆 Mesa（固定版本，避免 patch 对不上）
+      # ------------------------------------------------------------
+      - name: Clone Mesa
         run: |
           git clone https://gitlab.freedesktop.org/mesa/mesa.git
           cd mesa
           git checkout mesa-24.3.4
 
-      # ② 克隆 termux-packages（只拿 patch）
-      - name: 获取 Termux Mesa 补丁
+      # ------------------------------------------------------------
+      # 4. 克隆 termux-packages（只用它的 Mesa patch）
+      # ------------------------------------------------------------
+      - name: Clone termux-packages
         run: |
           git clone https://github.com/xMeM/termux-packages.git
 
-      # ③ 打补丁（核心步骤）
-      - name: 应用 Termux KGSL 补丁
+      # ------------------------------------------------------------
+      # 5. 调试：确认 patch 目录确实存在
+      # ------------------------------------------------------------
+      - name: Check patch directory
+        run: |
+          echo "=== tree termux-packages/packages/mesa ==="
+          ls -R termux-packages/packages/mesa | head -n 200
+
+      # ------------------------------------------------------------
+      # 6. 应用 Termux KGSL 补丁（关键步骤）
+      # ------------------------------------------------------------
+      - name: Apply Termux Mesa patches
         run: |
           cd mesa
-          for p in ../termux-packages/packages/mesa/patches/*.patch; do
-            echo "Applying $p"
+
+          PATCH_DIR=../termux-packages/packages/mesa/patches
+
+          if [ ! -d "$PATCH_DIR" ]; then
+            echo "ERROR: Patch directory not found: $PATCH_DIR"
+            echo "Current dir:"
+            pwd
+            echo "Parent dir:"
+            ls ..
+            exit 1
+          fi
+
+          echo "Using patches from: $PATCH_DIR"
+          ls "$PATCH_DIR"
+
+          for p in "$PATCH_DIR"/*.patch; do
+            echo "======================================"
+            echo "Applying patch: $p"
             patch -p1 < "$p"
           done
 
-      # ④ 配置 Mesa（和补丁“匹配”的配置）
-      - name: 配置 Mesa（KGSL + Freedreno + Zink）
+      # ------------------------------------------------------------
+      # 7. 配置 Mesa（与 KGSL patch 匹配）
+      # ------------------------------------------------------------
+      - name: Configure Mesa
         run: |
           cd mesa
+
           meson setup build \
             --prefix=/opt/mesa \
             -Doptimization=3 \
@@ -85,40 +123,62 @@ jobs:
             -Dvalgrind=disabled \
             -Dlibunwind=disabled
 
-      - name: 编译 Mesa
+      # ------------------------------------------------------------
+      # 8. 编译 Mesa
+      # ------------------------------------------------------------
+      - name: Build Mesa
         run: |
           cd mesa
           ninja -C build -j$(nproc)
 
-      - name: 安装到 DESTDIR
+      # ------------------------------------------------------------
+      # 9. 安装到 DESTDIR
+      # ------------------------------------------------------------
+      - name: Install Mesa to DESTDIR
         run: |
           cd mesa
           DESTDIR=$PWD/package meson install -C build
 
-      - name: 打包产物
+      # ------------------------------------------------------------
+      # 10. 验证驱动是否生成（非常重要）
+      # ------------------------------------------------------------
+      - name: Verify drivers
+        run: |
+          echo "=== DRI drivers ==="
+          ls mesa/package/opt/mesa/lib/aarch64-linux-gnu/dri || true
+
+      # ------------------------------------------------------------
+      # 11. 打包产物
+      # ------------------------------------------------------------
+      - name: Package Mesa
         run: |
           cd mesa
           VERSION=$(cat VERSION)
           GIT_HASH=$(git rev-parse --short HEAD)
+
           tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt
+
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
 
-      - name: 发布到 GitHub Release
+      # ------------------------------------------------------------
+      # 12. 发布 Release
+      # ------------------------------------------------------------
+      - name: Publish Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: mesa-${{ env.VERSION }}
           name: Mesa ${{ env.VERSION }} (aarch64, KGSL)
           body: |
-            Mesa aarch64（Termux / Android KGSL 专用）
+            Mesa aarch64（Termux / Android KGSL）
 
             - Freedreno (KGSL backend)
             - Vulkan Turnip
-            - Zink OpenGL-over-Vulkan
+            - Zink OpenGL over Vulkan
 
-            版本: ${{ env.VERSION }}
-            提交: ${{ env.GIT_HASH }}
-            安装前缀: /opt/mesa
+            Mesa version: ${{ env.VERSION }}
+            Commit: ${{ env.GIT_HASH }}
+            Prefix: /opt/mesa
           files: |
             mesa/mesa-${{ env.VERSION }}-aarch64.tar.gz
         env:
