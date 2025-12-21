@@ -59,10 +59,9 @@ jobs:
           -Dshader-cache-default=true \
           -Dplatforms=x11 \
           -Degl-native-platform=x11 \
-          -Dgallium-drivers=freedreno,zink,llvmpipe \
-          -Dgallium-rusticl-enable-drivers=freedreno \
+          -Dgallium-drivers=all \
           -Dmediafoundation-codecs=all \
-          -Dvulkan-drivers=freedreno,swrast,virtio \
+          -Dvulkan-drivers=all \
           -Dfreedreno-kmds=kgsl,virtio \
           -Dgles1=enabled \
           -Dgles2=enabled \
