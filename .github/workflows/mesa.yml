@@ -1,53 +1,49 @@
 name: Mesa aarch64 (Vulkan + Zink + Freedreno)
 
 on:
-workflow_dispatch:
+  workflow_dispatch:
 
 permissions:
-contents: write
+  contents: write
 
 jobs:
-build:
-runs-on: ubuntu-24.04-arm
+  build:
+    runs-on: ubuntu-24.04-arm
 
-steps:  
-  - name: 检出仓库  
-    uses: actions/checkout@v4  
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
 
-  - name: 安装依赖  
-    run: |  
-      sudo apt update  
-      sudo apt install -y \  
-        llvm-19 llvm-19-dev clang-19 \  
-        glslang-tools \  
-        libdrm-dev libgbm-dev \  
-        libx11-dev libx11-xcb-dev \  
-        libxcb1-dev libxcb-shm0-dev libxcb-glx0-dev \  
-        libxcb-dri3-dev libxcb-present-dev \  
-        libxcb-randr0-dev libxcb-sync-dev libxcb-xfixes0-dev \  
-        libxext-dev libxrandr-dev libxxf86vm-dev \  
-        libxshmfence-dev \  
-        libwayland-dev \  
-        libexpat1-dev \  
-        python3-pip \  
-        libglvnd-dev \  
-        libwayland-egl-backend-dev \  
-        libvulkan-dev  
-
-      pip3 install --user meson ninja mako  
-
-  - name: 克隆 Mesa 源码  
-    run: |  
-      git clone https://gitlab.freedesktop.org/mesa/mesa.git  
-      cd mesa  
-      git checkout main  
-
-  - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）  
-    run: |  
-      cd mesa  
-
-      mkdir -p build  
-      meson setup build \
+      - name: 安装依赖
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            llvm-19 llvm-19-dev clang-19 \
+            glslang-tools \
+            libdrm-dev libgbm-dev \
+            libx11-dev libx11-xcb-dev \
+            libxcb1-dev libxcb-shm0-dev libxcb-glx0-dev \
+            libxcb-dri3-dev libxcb-present-dev \
+            libxcb-randr0-dev libxcb-sync-dev libxcb-xfixes0-dev \
+            libxext-dev libxrandr-dev libxxf86vm-dev \
+            libxshmfence-dev \
+            libwayland-dev \
+            libexpat1-dev \
+            python3-pip \
+            libglvnd-dev \
+            libwayland-egl-backend-dev \
+            libvulkan-dev
+          pip3 install --user meson ninja mako
+      - name: 克隆 Mesa 源码
+        run: |
+          git clone https://gitlab.freedesktop.org/mesa/mesa.git
+          cd mesa
+          git checkout main
+      - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）
+        run: |
+          cd mesa
+          mkdir -p build
+          meson setup build \
           --prefix=/opt/mesa \
           -Doptimization=3 \
           -Db_lto=true \
@@ -57,44 +53,37 @@ steps:
           -Dgallium-rusticl-enable-drivers=freedreno \
           -Dvulkan-drivers=freedreno \
           -Dfreedreno-kmds=kgsl \
-          -Ddatasources=freedreno 
-      
+          -Ddatasources=freedreno
         
-  - name: 编译 Mesa  
-    run: |  
-      cd mesa  
-      ninja -C build -j$(nproc)  
-
-  - name: 安装到 DESTDIR（安全可复现）  
-    run: |  
-      cd mesa  
-      DESTDIR=$PWD/package meson install -C build  
-
-  - name: 打包产物  
-    run: |  
-      cd mesa  
-      VERSION=$(cat VERSION)  
-      GIT_HASH=$(git rev-parse --short HEAD)  
-
-      tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt  
-
-      echo "VERSION=${VERSION}" >> $GITHUB_ENV  
-      echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV  
-
-  - name: 发布到 GitHub Release  
-    uses: softprops/action-gh-release@v1  
-    with:  
-      tag_name: mesa-${{ env.VERSION }}  
-      name: Mesa ${{ env.VERSION }} (aarch64)  
-      body: |  
-        Mesa aarch64 构建（X11 + Vulkan + Zink + Freedreno）  
-
-        版本: ${{ env.VERSION }}  
-        提交: ${{ env.GIT_HASH }}  
-
-        安装前缀: /data/data/com.termux/files/usr/glibc  
-        通过 DESTDIR 打包，适用于 proot / Termux / chroot  
-      files: |  
-        mesa/mesa-${{ env.VERSION }}-aarch64.tar.gz  
-    env:  
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: 编译 Mesa
+        run: |
+          cd mesa
+          ninja -C build -j$(nproc)
+      - name: 安装到 DESTDIR（安全可复现）
+        run: |
+          cd mesa
+          DESTDIR=$PWD/package meson install -C build
+      - name: 打包产物
+        run: |
+          cd mesa
+          VERSION=$(cat VERSION)
+          GIT_HASH=$(git rev-parse --short HEAD)
+          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
+      - name: 发布到 GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: mesa-${{ env.VERSION }}
+          name: Mesa ${{ env.VERSION }} (aarch64)
+          body: |
+            Mesa aarch64 构建（X11 + Vulkan + Zink + Freedreno）
+            版本: ${{ env.VERSION }}
+            提交: ${{ env.GIT_HASH }}
+            安装前缀: /data/data/com.termux/files/usr/glibc
+            通过 DESTDIR 打包，适用于 proot / Termux / chroot
+          files: |
+            mesa/mesa-${{ env.VERSION }}-aarch64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
