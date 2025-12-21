@@ -34,7 +34,7 @@ jobs:
             libwayland-egl-backend-dev \
             libvulkan-dev \
             libvdpau-dev \
-            libclang-dev llvm-dev libclc-19-dev
+            libclang-dev llvm-dev libclc-19-dev spirv-llvm-translator libspirv-llvm-translator-dev
           cargo install bindgen-cli
           pip3 install --user meson ninja mako
       - name: 克隆 Mesa 源码
