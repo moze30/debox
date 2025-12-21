@@ -32,7 +32,7 @@ jobs:
             python3-pip \
             libglvnd-dev \
             libwayland-egl-backend-dev \
-            libvulkan-dev
+            libvulkan-dev libbindgen-dev
 
           pip3 install --user meson ninja mako
 
