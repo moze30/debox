@@ -1,4 +1,4 @@
-name: Mesa aarch64 (Vulkan + Zink + Freedreno)
+name: Mesa aarch64 (Vulkan + Zink + Freedreno KGSL)
 
 on:
   workflow_dispatch:
@@ -36,54 +36,61 @@ jobs:
 
           pip3 install --user meson ninja mako
 
+      # ① 克隆 Mesa（固定一个稳定分支，别用 main）
       - name: 克隆 Mesa 源码
         run: |
           git clone https://gitlab.freedesktop.org/mesa/mesa.git
           cd mesa
-          git checkout main
+          git checkout mesa-24.3.4
 
-      - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）
+      # ② 克隆 termux-packages（只拿 patch）
+      - name: 获取 Termux Mesa 补丁
+        run: |
+          git clone https://github.com/xMeM/termux-packages.git
+
+      # ③ 打补丁（核心步骤）
+      - name: 应用 Termux KGSL 补丁
         run: |
           cd mesa
+          for p in ../termux-packages/packages/mesa/patches/*.patch; do
+            echo "Applying $p"
+            patch -p1 < "$p"
+          done
 
-          mkdir -p build
+      # ④ 配置 Mesa（和补丁“匹配”的配置）
+      - name: 配置 Mesa（KGSL + Freedreno + Zink）
+        run: |
+          cd mesa
           meson setup build \
-          --prefix=/opt/mesa \
-          -Doptimization=3 \
-          -Db_lto=true \
-          -Dllvm=enabled \
-          -Dshared-llvm=enabled \
-          -Dvalgrind=disabled \
-          -Dlibunwind=disabled \
-          -Dshader-cache=enabled \
-          -Dshader-cache-default=true \
-          -Dplatforms=x11 \
-          -Degl-native-platform=x11 \
-          -Dgallium-drivers=freedreno,zink \
-          -Dmediafoundation-codecs=all \
-          -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmds=kgsl \
-          -Dgles1=enabled \
-          -Dgles2=enabled \
-          -Dopengl=true \
-          -Dgbm=enabled \
-          -Dglx=dri \
-          -Degl=enabled \
-          -Dglvnd=enabled \
-          -Dtools=freedreno,zink \
-          -Dglx-direct=true \
-          -Dvideo-codecs=all \
-          -Dgallium-d3d12-video=enabled \
-          -Dgallium-d3d12-graphics=enabled \
-          -Dimagination-srv=true
-        
-          
+            --prefix=/opt/mesa \
+            -Doptimization=3 \
+            -Db_lto=true \
+            -Dllvm=enabled \
+            -Dshared-llvm=enabled \
+            -Dplatforms=x11 \
+            -Degl-native-platform=x11 \
+            -Degl=enabled \
+            -Dglx=dri \
+            -Dglvnd=enabled \
+            -Dgbm=enabled \
+            -Dopengl=true \
+            -Dgles1=enabled \
+            -Dgles2=enabled \
+            -Dgallium-drivers=freedreno,zink,swrast \
+            -Dvulkan-drivers=freedreno \
+            -Dfreedreno-kmds=kgsl \
+            -Dtools=freedreno,zink \
+            -Dshader-cache=enabled \
+            -Dshader-cache-default=true \
+            -Dvalgrind=disabled \
+            -Dlibunwind=disabled
+
       - name: 编译 Mesa
         run: |
           cd mesa
           ninja -C build -j$(nproc)
 
-      - name: 安装到 DESTDIR（安全可复现）
+      - name: 安装到 DESTDIR
         run: |
           cd mesa
           DESTDIR=$PWD/package meson install -C build
@@ -93,9 +100,7 @@ jobs:
           cd mesa
           VERSION=$(cat VERSION)
           GIT_HASH=$(git rev-parse --short HEAD)
-
           tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt
-
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
 
@@ -103,15 +108,17 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: mesa-${{ env.VERSION }}
-          name: Mesa ${{ env.VERSION }} (aarch64)
+          name: Mesa ${{ env.VERSION }} (aarch64, KGSL)
           body: |
-            Mesa aarch64 构建（X11 + Vulkan + Zink + Freedreno）
+            Mesa aarch64（Termux / Android KGSL 专用）
+
+            - Freedreno (KGSL backend)
+            - Vulkan Turnip
+            - Zink OpenGL-over-Vulkan
 
             版本: ${{ env.VERSION }}
             提交: ${{ env.GIT_HASH }}
-
-            安装前缀: /data/data/com.termux/files/usr/glibc
-            通过 DESTDIR 打包，适用于 proot / Termux / chroot
+            安装前缀: /opt/mesa
           files: |
             mesa/mesa-${{ env.VERSION }}-aarch64.tar.gz
         env:
