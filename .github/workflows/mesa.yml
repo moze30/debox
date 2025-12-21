@@ -1,188 +1,118 @@
-name: Mesa aarch64 (Vulkan + Zink + Freedreno KGSL)
+name: Mesa aarch64 (Vulkan + Zink + Freedreno)
 
 on:
-  workflow_dispatch:
+workflow_dispatch:
 
 permissions:
-  contents: write
+contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04-arm
+build:
+runs-on: ubuntu-24.04-arm
 
-    steps:
-      # ------------------------------------------------------------
-      # 1. Checkout 当前仓库
-      # ------------------------------------------------------------
-      - name: Checkout repo
-        uses: actions/checkout@v4
+steps:  
+  - name: 检出仓库  
+    uses: actions/checkout@v4  
 
-      # ------------------------------------------------------------
-      # 2. 安装构建依赖
-      # ------------------------------------------------------------
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            llvm-19 llvm-19-dev clang-19 \
-            glslang-tools \
-            libdrm-dev libgbm-dev \
-            libx11-dev libx11-xcb-dev \
-            libxcb1-dev libxcb-shm0-dev libxcb-glx0-dev \
-            libxcb-dri3-dev libxcb-present-dev \
-            libxcb-randr0-dev libxcb-sync-dev libxcb-xfixes0-dev \
-            libxext-dev libxrandr-dev libxxf86vm-dev \
-            libxshmfence-dev \
-            libwayland-dev \
-            libexpat1-dev \
-            libglvnd-dev \
-            libvulkan-dev \
-            python3-pip
+  - name: 安装依赖  
+    run: |  
+      sudo apt update  
+      sudo apt install -y \  
+        llvm-19 llvm-19-dev clang-19 \  
+        glslang-tools \  
+        libdrm-dev libgbm-dev \  
+        libx11-dev libx11-xcb-dev \  
+        libxcb1-dev libxcb-shm0-dev libxcb-glx0-dev \  
+        libxcb-dri3-dev libxcb-present-dev \  
+        libxcb-randr0-dev libxcb-sync-dev libxcb-xfixes0-dev \  
+        libxext-dev libxrandr-dev libxxf86vm-dev \  
+        libxshmfence-dev \  
+        libwayland-dev \  
+        libexpat1-dev \  
+        python3-pip \  
+        libglvnd-dev \  
+        libwayland-egl-backend-dev \  
+        libvulkan-dev  
 
-          pip3 install --user meson ninja mako
+      pip3 install --user meson ninja mako  
 
-      # ------------------------------------------------------------
-      # 3. 克隆 Mesa（固定版本，避免 patch 对不上）
-      # ------------------------------------------------------------
-      - name: Clone Mesa
-        run: |
-          git clone https://gitlab.freedesktop.org/mesa/mesa.git
-          cd mesa
-          git checkout mesa-24.3.4
+  - name: 克隆 Mesa 源码  
+    run: |  
+      git clone https://gitlab.freedesktop.org/mesa/mesa.git  
+      cd mesa  
+      git checkout main  
 
-      # ------------------------------------------------------------
-      # 4. 克隆 termux-packages（xMeM fork）
-      # ------------------------------------------------------------
-      - name: Clone termux-packages
-        run: |
-          git clone https://github.com/xMeM/termux-packages.git
+  - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）  
+    run: |  
+      cd mesa  
 
-      # ------------------------------------------------------------
-      # 5. 打印 termux-packages 结构（调试用，但非常重要）
-      # ------------------------------------------------------------
-      - name: Inspect termux-packages tree
-        run: |
-          echo "==== termux-packages top level ===="
-          ls termux-packages
-          echo
-          echo "==== searching for mesa directories ===="
-          find termux-packages -type d -iname '*mesa*' | head -n 50
+      mkdir -p build  
+      meson setup build \
+          --prefix=/opt/mesa \
+          -Doptimization=3 \
+          -Db_lto=true \
+          -Dllvm=enabled \
+          -Dshared-llvm=enabled \
+          -Dvalgrind=disabled \
+          -Dlibunwind=disabled \
+          -Dshader-cache=enabled \
+          -Dshader-cache-default=true \
+          -Dplatforms=x11 \
+          -Degl-native-platform=x11 \
+          -Dgallium-drivers=freedreno,zink \
+          -Dmediafoundation-codecs=all \
+          -Dvulkan-drivers=freedreno \
+          -Dfreedreno-kmds=kgsl,virtio \
+          -Dgles1=enabled \
+          -Dgles2=enabled \
+          -Dopengl=true \
+          -Dgbm=enabled \
+          -Dglx=dri \
+          -Degl=enabled \
+          -Dglvnd=enabled \
+          -Dtools=freedreno,zink \
+          -Dglx-direct=true \
+          -Dvideo-codecs=all \
+          -Dgallium-d3d12-video=enabled \
+          -Dgallium-d3d12-graphics=enabled \
+          -Dimagination-srv=true
+      
+        
+  - name: 编译 Mesa  
+    run: |  
+      cd mesa  
+      ninja -C build -j$(nproc)  
 
-      # ------------------------------------------------------------
-      # 6. 自动查找并应用 Mesa patch（核心步骤）
-      # ------------------------------------------------------------
-      - name: Apply Termux Mesa patches
-        run: |
-          cd mesa
+  - name: 安装到 DESTDIR（安全可复现）  
+    run: |  
+      cd mesa  
+      DESTDIR=$PWD/package meson install -C build  
 
-          echo "Searching for Mesa-related patches in ../termux-packages ..."
+  - name: 打包产物  
+    run: |  
+      cd mesa  
+      VERSION=$(cat VERSION)  
+      GIT_HASH=$(git rev-parse --short HEAD)  
 
-          PATCH_FILES=$(find ../termux-packages -type f -name '*.patch' | grep -i mesa || true)
+      tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt  
 
-          if [ -z "$PATCH_FILES" ]; then
-            echo "ERROR: No Mesa patch files found!"
-            echo "Dumping termux-packages tree (first 200 lines):"
-            ls -R ../termux-packages | head -n 200
-            exit 1
-          fi
+      echo "VERSION=${VERSION}" >> $GITHUB_ENV  
+      echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV  
 
-          echo "Found the following Mesa patches:"
-          echo "$PATCH_FILES"
+  - name: 发布到 GitHub Release  
+    uses: softprops/action-gh-release@v1  
+    with:  
+      tag_name: mesa-${{ env.VERSION }}  
+      name: Mesa ${{ env.VERSION }} (aarch64)  
+      body: |  
+        Mesa aarch64 构建（X11 + Vulkan + Zink + Freedreno）  
 
-          for p in $PATCH_FILES; do
-            echo "--------------------------------------"
-            echo "Applying patch: $p"
-            patch -p1 < "$p"
-          done
+        版本: ${{ env.VERSION }}  
+        提交: ${{ env.GIT_HASH }}  
 
-      # ------------------------------------------------------------
-      # 7. 配置 Mesa（与 KGSL 补丁匹配）
-      # ------------------------------------------------------------
-      - name: Configure Mesa
-        run: |
-          cd mesa
-
-          meson setup build \
-            --prefix=/opt/mesa \
-            -Doptimization=3 \
-            -Db_lto=true \
-            -Dllvm=enabled \
-            -Dshared-llvm=enabled \
-            -Dplatforms=x11 \
-            -Degl-native-platform=x11 \
-            -Degl=enabled \
-            -Dglx=dri \
-            -Dglvnd=enabled \
-            -Dgbm=enabled \
-            -Dopengl=true \
-            -Dgles1=enabled \
-            -Dgles2=enabled \
-            -Dgallium-drivers=freedreno,zink,swrast \
-            -Dvulkan-drivers=freedreno \
-            -Dfreedreno-kmds=kgsl \
-            -Dtools=freedreno,zink \
-            -Dshader-cache=enabled \
-            -Dshader-cache-default=true \
-            -Dvalgrind=disabled \
-            -Dlibunwind=disabled
-
-      # ------------------------------------------------------------
-      # 8. 编译 Mesa
-      # ------------------------------------------------------------
-      - name: Build Mesa
-        run: |
-          cd mesa
-          ninja -C build -j$(nproc)
-
-      # ------------------------------------------------------------
-      # 9. 安装到 DESTDIR
-      # ------------------------------------------------------------
-      - name: Install Mesa to DESTDIR
-        run: |
-          cd mesa
-          DESTDIR=$PWD/package meson install -C build
-
-      # ------------------------------------------------------------
-      # 10. 验证驱动是否生成（关键验证）
-      # ------------------------------------------------------------
-      - name: Verify DRI drivers
-        run: |
-          echo "==== DRI drivers ===="
-          ls mesa/package/opt/mesa/lib/aarch64-linux-gnu/dri || true
-
-      # ------------------------------------------------------------
-      # 11. 打包产物
-      # ------------------------------------------------------------
-      - name: Package Mesa
-        run: |
-          cd mesa
-          VERSION=$(cat VERSION)
-          GIT_HASH=$(git rev-parse --short HEAD)
-
-          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt
-
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
-
-      # ------------------------------------------------------------
-      # 12. 发布 Release
-      # ------------------------------------------------------------
-      - name: Publish Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: mesa-${{ env.VERSION }}
-          name: Mesa ${{ env.VERSION }} (aarch64, KGSL)
-          body: |
-            Mesa aarch64（Termux / Android KGSL）
-
-            - Freedreno (KGSL backend)
-            - Vulkan Turnip
-            - Zink OpenGL over Vulkan
-
-            Mesa version: ${{ env.VERSION }}
-            Commit: ${{ env.GIT_HASH }}
-            Prefix: /opt/mesa
-          files: |
-            mesa/mesa-${{ env.VERSION }}-aarch64.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        安装前缀: /data/data/com.termux/files/usr/glibc  
+        通过 DESTDIR 打包，适用于 proot / Termux / chroot  
+      files: |  
+        mesa/mesa-${{ env.VERSION }}-aarch64.tar.gz  
+    env:  
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
