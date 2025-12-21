@@ -12,7 +12,7 @@ jobs:
 
     steps:
       # ------------------------------------------------------------
-      # 1. Checkout 当前仓库（只是为了 workflow 本身）
+      # 1. Checkout 当前仓库
       # ------------------------------------------------------------
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -51,49 +51,52 @@ jobs:
           git checkout mesa-24.3.4
 
       # ------------------------------------------------------------
-      # 4. 克隆 termux-packages（只用它的 Mesa patch）
+      # 4. 克隆 termux-packages（xMeM fork）
       # ------------------------------------------------------------
       - name: Clone termux-packages
         run: |
           git clone https://github.com/xMeM/termux-packages.git
 
       # ------------------------------------------------------------
-      # 5. 调试：确认 patch 目录确实存在
+      # 5. 打印 termux-packages 结构（调试用，但非常重要）
       # ------------------------------------------------------------
-      - name: Check patch directory
+      - name: Inspect termux-packages tree
         run: |
-          echo "=== tree termux-packages/packages/mesa ==="
-          ls -R termux-packages/packages/mesa | head -n 200
+          echo "==== termux-packages top level ===="
+          ls termux-packages
+          echo
+          echo "==== searching for mesa directories ===="
+          find termux-packages -type d -iname '*mesa*' | head -n 50
 
       # ------------------------------------------------------------
-      # 6. 应用 Termux KGSL 补丁（关键步骤）
+      # 6. 自动查找并应用 Mesa patch（核心步骤）
       # ------------------------------------------------------------
       - name: Apply Termux Mesa patches
         run: |
           cd mesa
 
-          PATCH_DIR=../termux-packages/packages/mesa/patches
+          echo "Searching for Mesa-related patches in ../termux-packages ..."
 
-          if [ ! -d "$PATCH_DIR" ]; then
-            echo "ERROR: Patch directory not found: $PATCH_DIR"
-            echo "Current dir:"
-            pwd
-            echo "Parent dir:"
-            ls ..
+          PATCH_FILES=$(find ../termux-packages -type f -name '*.patch' | grep -i mesa || true)
+
+          if [ -z "$PATCH_FILES" ]; then
+            echo "ERROR: No Mesa patch files found!"
+            echo "Dumping termux-packages tree (first 200 lines):"
+            ls -R ../termux-packages | head -n 200
             exit 1
           fi
 
-          echo "Using patches from: $PATCH_DIR"
-          ls "$PATCH_DIR"
+          echo "Found the following Mesa patches:"
+          echo "$PATCH_FILES"
 
-          for p in "$PATCH_DIR"/*.patch; do
-            echo "======================================"
+          for p in $PATCH_FILES; do
+            echo "--------------------------------------"
             echo "Applying patch: $p"
             patch -p1 < "$p"
           done
 
       # ------------------------------------------------------------
-      # 7. 配置 Mesa（与 KGSL patch 匹配）
+      # 7. 配置 Mesa（与 KGSL 补丁匹配）
       # ------------------------------------------------------------
       - name: Configure Mesa
         run: |
@@ -140,11 +143,11 @@ jobs:
           DESTDIR=$PWD/package meson install -C build
 
       # ------------------------------------------------------------
-      # 10. 验证驱动是否生成（非常重要）
+      # 10. 验证驱动是否生成（关键验证）
       # ------------------------------------------------------------
-      - name: Verify drivers
+      - name: Verify DRI drivers
         run: |
-          echo "=== DRI drivers ==="
+          echo "==== DRI drivers ===="
           ls mesa/package/opt/mesa/lib/aarch64-linux-gnu/dri || true
 
       # ------------------------------------------------------------
