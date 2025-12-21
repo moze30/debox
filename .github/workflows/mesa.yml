@@ -46,35 +46,7 @@ jobs:
         run: |
           cd mesa
           mkdir -p build
-          meson setup build \
-          --prefix=/opt/mesa \
-          --buildtype=release \
-          -Db_ndebug=true \
-          -Db_lto=false \
-          -Dplatforms=auto \
-          -Degl=enabled \
-          -Degl-native-platform=drm \
-          -Dgbm=enabled \
-          -Dglx=dri \
-          -Dglvnd=enabled \
-          -Dopengl=true \
-          -Dgles1=enabled \
-          -Dgles2=enabled \
-          -Dosmesa=true \
-          -Dllvm=enabled \
-          -Dshared-llvm=disabled \
-          -Dvulkan-drivers=freedreno,virtio,swrast \
-          -Dvulkan-icd-dir=share/vulkan/icd.d \
-          -Dfreedreno-kmds=msm,kgsl,virtio,wsl \
-          -Dgallium-drivers=freedreno,virgl,svga,swrast,zink,d3d12 \
-          -Dgallium-nine=true \
-          -Dgallium-opencl=icd \
-          -Dgallium-rusticl=true \
-          -Dspirv-to-dxil=true \
-          -Dmicrosoft-clc=enabled \
-          -Dgallium-vdpau=enabled \
-          -Dvideo-codecs=all_free \
-          -Dtools=all
+          meson setup build --prefix=/opt/mesa --buildtype=release -Db_ndebug=true -Dplatforms=auto -Degl=enabled -Degl-native-platform=drm -Dgbm=enabled -Dglx=dri -Dglvnd=enabled -Dopengl=true -Dgles1=enabled -Dgles2=enabled -Dosmesa=true -Dllvm=enabled -Dshared-llvm=disabled -Dvulkan-drivers=freedreno,virtio,swrast -Dfreedreno-kmds=msm,kgsl,virtio,wsl -Dgallium-drivers=freedreno,virgl,svga,swrast,zink -Dgallium-nine=true -Dgallium-opencl=icd -Dgallium-rusticl=true -Dgallium-vdpau=enabled -Dvideo-codecs=all_free -Dmicrosoft-clc=disabled -Dspirv-to-dxil=false -Dd3d12=false -Dtools=all
         
           
       - name: 编译 Mesa
