@@ -51,31 +51,13 @@ steps:
           --prefix=/opt/mesa \
           -Doptimization=3 \
           -Db_lto=true \
-          -Dllvm=enabled \
-          -Dshared-llvm=enabled \
-          -Dvalgrind=disabled \
-          -Dlibunwind=disabled \
-          -Dshader-cache=enabled \
-          -Dshader-cache-default=true \
           -Dplatforms=x11 \
           -Degl-native-platform=x11 \
           -Dgallium-drivers=freedreno,zink \
-          -Dmediafoundation-codecs=all \
+          -Dgallium-rusticl-enable-drivers=freedreno \
           -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmds=kgsl,virtio \
-          -Dgles1=enabled \
-          -Dgles2=enabled \
-          -Dopengl=true \
-          -Dgbm=enabled \
-          -Dglx=dri \
-          -Degl=enabled \
-          -Dglvnd=enabled \
-          -Dtools=freedreno,zink \
-          -Dglx-direct=true \
-          -Dvideo-codecs=all \
-          -Dgallium-d3d12-video=enabled \
-          -Dgallium-d3d12-graphics=enabled \
-          -Dimagination-srv=true
+          -Dfreedreno-kmds=kgsl \
+          -Ddatasources=freedreno 
       
         
   - name: 编译 Mesa  
