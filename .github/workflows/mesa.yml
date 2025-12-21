@@ -59,21 +59,24 @@ jobs:
           -Dshader-cache-default=true \
           -Dplatforms=x11 \
           -Degl-native-platform=x11 \
-          -Dgallium-drivers=freedreno,zink \
+          -Dgallium-drivers=freedreno,zink,llvmpipe \
           -Dgallium-rusticl-enable-drivers=freedreno \
           -Dmediafoundation-codecs=all \
-          -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmds=kgsl \
+          -Dvulkan-drivers=freedreno,swrast,virtio \
+          -Dfreedreno-kmds=kgsl,virtio \
           -Dgles1=enabled \
           -Dgles2=enabled \
           -Dopengl=true \
           -Dgbm=enabled \
-          -Dglx=disabled \
+          -Dglx=dri \
           -Degl=enabled \
           -Dglvnd=enabled \
           -Dtools=freedreno,zink \
           -Dglx-direct=true \
-          -Dvideo-codecs=all
+          -Dvideo-codecs=all \
+          -Dgallium-d3d12-video=enabled \
+          -Dgallium-d3d12-graphics=enabled \
+          -Dimagination-srv=true
         
           
       - name: 编译 Mesa
