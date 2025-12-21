@@ -32,7 +32,7 @@ jobs:
             python3-pip \
             libglvnd-dev \
             libwayland-egl-backend-dev \
-            libvulkan-dev libbindgen-dev
+            libvulkan-dev
 
           pip3 install --user meson ninja mako
 
@@ -59,15 +59,15 @@ jobs:
           -Dshader-cache-default=true \
           -Dplatforms=x11 \
           -Degl-native-platform=x11 \
-          -Dgallium-drivers=all \
+          -Dgallium-drivers=swrast,virgl,zink,freedreno \
           -Dmediafoundation-codecs=all \
-          -Dvulkan-drivers=all \
-          -Dfreedreno-kmds=kgsl,virtio \
-          -Dgles1=enabled \
+          -Dvulkan-drivers=freedreno \
+          -Dfreedreno-kmds=kgsl \
+          -Dgles1=disabled \
           -Dgles2=enabled \
-          -Dopengl=true \
+          -Dopengl=false \
           -Dgbm=enabled \
-          -Dglx=dri \
+          -Dglx=disabled \
           -Degl=enabled \
           -Dglvnd=enabled \
           -Dtools=freedreno,zink \
