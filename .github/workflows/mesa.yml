@@ -38,22 +38,40 @@ jobs:
         run: |
           git clone https://gitlab.freedesktop.org/mesa/mesa.git
           cd mesa
-          git checkout main
+          git checkout 16f4b93cac
       - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）
         run: |
           cd mesa
           mkdir -p build
           meson setup build \
           --prefix=/opt/mesa \
-          -Doptimization=3 \
-          -Db_lto=true \
-          -Dplatforms=x11 \
-          -Degl-native-platform=x11 \
-          -Dgallium-drivers=freedreno,zink \
-          -Dgallium-rusticl-enable-drivers=freedreno \
-          -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmds=kgsl \
-          -Ddatasources=freedreno
+          --buildtype=release \
+          -Db_ndebug=true \
+          -Db_lto=false \
+          -Dplatforms=auto \
+          -Degl=enabled \
+          -Degl-native-platform=drm \
+          -Dgbm=enabled \
+          -Dglx=dri \
+          -Dglvnd=enabled \
+          -Dopengl=true \
+          -Dgles1=enabled \
+          -Dgles2=enabled \
+          -Dosmesa=true \
+          -Dllvm=enabled \
+          -Dshared-llvm=disabled \
+          -Dvulkan-drivers=freedreno,virtio,swrast \
+          -Dvulkan-icd-dir=share/vulkan/icd.d \
+          -Dfreedreno-kmds=msm,kgsl,virtio,wsl \
+          -Dgallium-drivers=freedreno,virgl,svga,swrast,zink,d3d12 \
+          -Dgallium-nine=true \
+          -Dgallium-opencl=icd \
+          -Dgallium-rusticl=true \
+          -Dspirv-to-dxil=true \
+          -Dmicrosoft-clc=enabled \
+          -Dgallium-vdpau=enabled \
+          -Dvideo-codecs=all_free \
+          -Dtools=all
         
           
       - name: 编译 Mesa
