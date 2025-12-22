@@ -68,7 +68,7 @@ jobs:
           ninja -C build -j$(nproc)
       - name: 安装到 DESTDIR（安全可复现）
         run: |
-          cd mesa
+          cd mesa-for-android-container
           DESTDIR=$PWD/package meson install -C build
       - name: 打包产物
         run: |
