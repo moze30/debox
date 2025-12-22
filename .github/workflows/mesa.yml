@@ -61,7 +61,7 @@ jobs:
           -Degl=enabled \
           -Dvideo-codecs=all \
           -Dllvm=enabled \
-          -Dshared-llvm=disabled \
+          -Dshared-llvm=enabled  \
           -Dvalgrind=disabled \
           -Dlibunwind=disabled \
           -Dshader-cache=enabled \
