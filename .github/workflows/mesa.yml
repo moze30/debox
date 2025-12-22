@@ -32,15 +32,13 @@ jobs:
             python3-pip \
             libglvnd-dev \
             libwayland-egl-backend-dev \
-            libvulkan-dev \
-            libvdpau-dev \
-            libclang-dev llvm-dev libclc-19-dev
-          cargo install bindgen-cli
+            libvulkan-dev
           pip3 install --user meson ninja mako
       - name: 克隆 Mesa 源码
         run: |
           git clone https://gitlab.freedesktop.org/mesa/mesa.git
           cd mesa
+          git checkout main
       - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）
         run: |
           cd mesa
@@ -49,31 +47,26 @@ jobs:
           --prefix=/opt/mesa \
           -Doptimization=3 \
           -Db_lto=true \
-          -Dllvm=enabled \
-          -Dshared-llvm=disabled \
-          -Dvalgrind=disabled \
-          -Dlibunwind=disabled \
-          -Dshader-cache=enabled \
-          -Dshader-cache-default=true \
           -Dplatforms=x11 \
           -Degl-native-platform=x11 \
           -Dgallium-drivers=freedreno,zink \
           -Dmediafoundation-codecs=all \
           -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmds=kgsl,virtio \
+          -Dfreedreno-kmds=msm \
           -Dgles1=enabled \
           -Dgles2=enabled \
           -Dopengl=true \
           -Dgbm=enabled \
-          -Dglx=dri \
+          -Dglx=disabled \
           -Degl=enabled \
-          -Dglvnd=enabled \
-          -Dtools=freedreno,zink \
-          -Dglx-direct=true \
           -Dvideo-codecs=all \
-          -Dgallium-d3d12-video=enabled \
-          -Dgallium-d3d12-graphics=enabled \
-          -Dimagination-srv=true
+          -Dllvm=enabled \
+          -Dshared-llvm=disabled \
+          -Dvalgrind=disabled \
+          -Dlibunwind=disabled \
+          -Dshader-cache=enabled \
+          -Dshader-cache-default=true
+          
           
       - name: 编译 Mesa
         run: |
