@@ -16,7 +16,7 @@ jobs:
 
       - name: 安装依赖
         run: |
-          sudo sed -i '/^deb /{p;s/^deb/deb-src/}' /etc/apt/sources.list
+          sudo sed -i "s/^Types: deb$/Types: deb deb-src/" /etc/apt/sources.list.d/ubuntu.sources
           sudo apt update
           sudo apt build-dep mesa
           sudo apt install -y \
