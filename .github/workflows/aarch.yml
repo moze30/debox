@@ -45,8 +45,8 @@ jobs:
         run: |
           cd mesa-for-android-container
           mkdir -p build
-          meson setup build/ \
-           --prefix=/usr \
+          meson setup build \
+          --prefix=/opt/mesa \
           -Dplatforms=x11,wayland \
           -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
           -Dvulkan-drivers=freedreno \
