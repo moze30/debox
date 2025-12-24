@@ -44,40 +44,28 @@ jobs:
           cd mesa
           mkdir -p build
           meson setup build \
-            --libdir=lib \
-            -Dprefix=/data/data/com.termux/files/usr/glibc \
-            -Dbuildtype=release \
-            -Doptimization=3 \
-            -Db_lto=true \
-            -Dplatforms=x11 \
-            -Degl-native-platform=x11 \
-            -Dglx=dri \
-            -Dglx-direct=true \
-            -Dopengl=true \
-            -Dgles1=enabled \
-            -Dgles2=enabled \
-            -Dglvnd=disabled \
-            -Degl=enabled \
-            -Dllvm=enabled \
-            -Dshared-llvm=enabled \
-            -Dshader-cache=enabled \
-            -Dshared-glapi=enabled \
-            -Dxlib-lease=enabled \
-            -Dvulkan-beta=true \
-            -Dlibunwind=disabled \
-            -Dvalgrind=disabled \
-            -Dmicrosoft-clc=disabled \
-            -Dgallium-rusticl=false \
-            -Dgallium-extra-hud=true \
-            -Dgallium-drivers=zink,freedreno,llvmpipe,softpipe \
-            -Dgallium-rusticl-enable-drivers=freedreno \
-            -Dshader-cache-default=true \
-            -Dvulkan-drivers=freedreno,swrast \
-            -Dfreedreno-kmds=msm,kgsl \
-            -Dvideo-codecs=all \
-            -Dmediafoundation-codecs=all \
-            -Dgbm=enabled \
-            -Dtools=drm-shim,freedreno
+          --prefix=/opt/mesa \
+          -Doptimization=3 \
+          -Db_lto=true \
+          -Dplatforms=x11 \
+          -Degl-native-platform=x11 \
+          -Dgallium-drivers=freedreno,zink \
+          -Dmediafoundation-codecs=all \
+          -Dvulkan-drivers=freedreno \
+          -Dfreedreno-kmds=kgsl \
+          -Dgles1=enabled \
+          -Dgles2=enabled \
+          -Dopengl=true \
+          -Dgbm=enabled \
+          -Dglx=disabled \
+          -Degl=enabled \
+          -Dvideo-codecs=all \
+          -Dllvm=enabled \
+          -Dvalgrind=disabled \
+          -Dlibunwind=disabled \
+          -Dshader-cache=enabled \
+          -Dshader-cache-default=true
+
           
           
       - name: 编译 Mesa
