@@ -81,7 +81,7 @@ jobs:
           cd mesa
           VERSION=$(cat VERSION)
           GIT_HASH=$(git rev-parse --short HEAD)
-          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package data
+          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
       - name: 发布到 GitHub Release
