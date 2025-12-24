@@ -90,10 +90,10 @@ jobs:
           DESTDIR=$PWD/package meson install -C build
       - name: 打包产物
         run: |
-          cd mesa/package/data/data/com.termux/files/usr
+          cd mesa
           VERSION=$(cat VERSION)
           GIT_HASH=$(git rev-parse --short HEAD)
-          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package glibc
+          tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package data
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
       - name: 发布到 GitHub Release
