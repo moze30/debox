@@ -38,7 +38,7 @@ jobs:
         run: |
           git clone https://gitlab.freedesktop.org/mesa/mesa.git
           cd mesa
-          git checkout main
+          git checkout 16f4b93cac
       - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）
         run: |
           cd mesa
@@ -49,22 +49,22 @@ jobs:
           -Db_lto=true \
           -Dplatforms=x11 \
           -Degl-native-platform=x11 \
-          -Dgallium-drivers=freedreno,zink \
-          -Dmediafoundation-codecs=all \
-          -Dvulkan-drivers=freedreno \
-          -Dfreedreno-kmds=kgsl \
+          -Dgallium-drivers=swrast,zink,virgl \
+          -Dvulkan-drivers=freedreno,virtio \
+          -Dfreedreno-kmds=msm,kgsl,virtio \
           -Dgles1=enabled \
           -Dgles2=enabled \
           -Dopengl=true \
-          -Dgbm=enabled \
-          -Dglx=disabled \
+          -Dglx=dri \
           -Degl=enabled \
-          -Dvideo-codecs=all \
+          -Dglvnd=enabled \
           -Dllvm=enabled \
-          -Dvalgrind=disabled \
-          -Dlibunwind=disabled \
-          -Dshader-cache=enabled \
-          -Dshader-cache-default=true
+          -Dshared-llvm=disabled \
+          -Dlegacy-x11=dri2 \
+          -Dgallium-vdpau=enabled \
+          -Dgbm=enabled \
+          -Dgallium-nine=true \
+          -Dgallium-d3d12-video=enabled
 
           
           
