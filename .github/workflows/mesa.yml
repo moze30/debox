@@ -63,7 +63,6 @@ jobs:
           -Dshared-llvm=disabled \
           -Dlegacy-x11=dri2 \
           -Dgbm=enabled \
-          -Dgallium-nine=true \
           -Dgallium-d3d12-video=enabled
 
           
