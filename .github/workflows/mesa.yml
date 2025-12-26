@@ -33,7 +33,7 @@ jobs:
             libglvnd-dev \
             libwayland-egl-backend-dev \
             libvulkan-dev libpolly-19-dev \
-            libvdpau-dev libxfixes-dev
+            libvdpau-dev libxfixes-dev rust-bindgen
           pip3 install --user meson ninja mako
       - name: 克隆 Mesa 源码
         run: |
