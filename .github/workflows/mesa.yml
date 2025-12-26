@@ -68,7 +68,8 @@ jobs:
           -Dlibunwind=disabled \
           -Dvalgrind=disabled \
           -Dmicrosoft-clc=disabled \
-          -Dgallium-rusticl=false
+          -Dgallium-rusticl=true \
+          -Dgallium-nine=true
 
           
           
