@@ -45,21 +45,40 @@ jobs:
         run: |
           cd mesa-for-android-container
           mkdir -p build
-          meson setup build \
-          --prefix=/opt/mesa \
-          -Dplatforms=x11,wayland \
-          -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
-          -Dvulkan-drivers=freedreno \
-          -Degl=enabled \
-          -Dgles2=enabled \
-          -Dglvnd=enabled \
-          -Dglx=dri \
-          -Dlibunwind=disabled \
-          -Dmicrosoft-clc=disabled \
-          -Dvalgrind=disabled \
-          -Dgles1=disabled \
-          -Dfreedreno-kmds=kgsl \
-          -Dbuildtype=release
+           meson setup builddir \
+            --prefix=/opt/mesa \
+            -Dbuildtype=release \
+            -Doptimization=3 \
+            -Db_lto=true \
+            -Dplatforms=x11 \
+            -Degl-native-platform=x11 \
+            -Dglx=dri \
+            -Dglx-direct=true \
+            -Dopengl=true \
+            -Dgles1=enabled \
+            -Dgles2=enabled \
+            -Dglvnd=disabled \
+            -Degl=enabled \
+            -Dllvm=enabled \
+            -Dshared-llvm=enabled \
+            -Dshader-cache=enabled \
+            -Dshared-glapi=enabled \
+            -Dxlib-lease=enabled \
+            -Dvulkan-beta=true \
+            -Dlibunwind=disabled \
+            -Dvalgrind=disabled \
+            -Dmicrosoft-clc=disabled \
+            -Dgallium-rusticl=false \
+            -Dgallium-extra-hud=true \
+            -Dgallium-drivers=zink,freedreno,llvmpipe,softpipe \
+            -Dgallium-rusticl-enable-drivers=freedreno \
+            -Dshader-cache-default=true \
+            -Dvulkan-drivers=freedreno,swrast \
+            -Dfreedreno-kmds=msm,kgsl \
+            -Dvideo-codecs=all \
+            -Dmediafoundation-codecs=all \
+            -Dgbm=enabled \
+            -Dtools=drm-shim,freedreno
           
           
       - name: 编译 Mesa
