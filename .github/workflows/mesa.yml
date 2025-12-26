@@ -62,12 +62,6 @@ jobs:
           -Dllvm=enabled \
           -Dshared-llvm=disabled \
           -Dlegacy-x11=dri2 \
-          -Dgbm=enabled \
-          -Dgallium-d3d12-video=enabled \
-          -Dlibunwind=disabled \
-          -Dvalgrind=disabled \
-          -Dmicrosoft-clc=disabled \
-          -Dgallium-rusticl=false
 
 
           
