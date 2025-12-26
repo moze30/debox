@@ -56,7 +56,6 @@ jobs:
             -Dopengl=true \
             -Dgles1=enabled \
             -Dgles2=enabled \
-            -Dglvnd=disabled \
             -Degl=enabled \
             -Dllvm=enabled \
             -Dshared-llvm=enabled \
@@ -71,7 +70,6 @@ jobs:
             -Dvulkan-drivers=freedreno,swrast \
             -Dfreedreno-kmds=msm,kgsl \
             -Dgbm=enabled \
-            -Dtools=drm-shim,freedreno
 
 
           
