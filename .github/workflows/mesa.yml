@@ -55,7 +55,7 @@ jobs:
           -Dfreedreno-kmds=msm,kgsl \
           -Dgles1=disabled \
           -Dgles2=disabled \
-          -Dopengl=false \
+          -Dopengl=true \
           -Dglx=dri \
           -Degl=enabled \
           -Dglvnd=enabled \
