@@ -53,9 +53,9 @@ jobs:
           -Dgallium-drivers=zink \
           -Dvulkan-drivers=freedreno \
           -Dfreedreno-kmds=msm,kgsl \
-          -Dgles1=enabled \
-          -Dgles2=enabled \
-          -Dopengl=true \
+          -Dgles1=disabled \
+          -Dgles2=disabled \
+          -Dopengl=false \
           -Dglx=dri \
           -Degl=enabled \
           -Dglvnd=enabled \
