@@ -74,8 +74,6 @@ jobs:
             -Dshader-cache-default=true \
             -Dvulkan-drivers=freedreno,swrast \
             -Dfreedreno-kmds=msm,kgsl \
-            -Dvideo-codecs=all \
-            -Dmediafoundation-codecs=all \
             -Dgbm=enabled \
             -Dtools=drm-shim,freedreno
 
