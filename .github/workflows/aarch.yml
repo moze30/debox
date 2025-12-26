@@ -47,7 +47,6 @@ jobs:
            meson setup build \
             --libdir=lib \
             -Dprefix=/opt/mesa \
-            -Dbuildtype=release \
             -Doptimization=3 \
             -Db_lto=true \
             -Dplatforms=x11 \
