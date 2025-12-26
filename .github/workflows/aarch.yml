@@ -65,10 +65,6 @@ jobs:
             -Dshared-glapi=enabled \
             -Dxlib-lease=enabled \
             -Dvulkan-beta=true \
-            -Dlibunwind=disabled \
-            -Dvalgrind=disabled \
-            -Dmicrosoft-clc=disabled \
-            -Dgallium-rusticl=false \
             -Dgallium-extra-hud=true \
             -Dgallium-drivers=zink \
             -Dgallium-rusticl-enable-drivers=freedreno \
@@ -78,7 +74,6 @@ jobs:
             -Dvideo-codecs=all \
             -Dmediafoundation-codecs=all \
             -Dgbm=enabled \
-            -Dtools=drm-shim,freedreno
 
 
           
