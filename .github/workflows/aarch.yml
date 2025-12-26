@@ -1,4 +1,4 @@
-name: Mesa kgsl
+name: Mesa aarch64 (Vulkan + Zink + Freedreno)
 
 on:
   workflow_dispatch:
@@ -16,9 +16,7 @@ jobs:
 
       - name: 安装依赖
         run: |
-          sudo sed -i "s/^Types: deb$/Types: deb deb-src/" /etc/apt/sources.list.d/ubuntu.sources
           sudo apt update
-          sudo apt build-dep mesa
           sudo apt install -y \
             llvm-19 llvm-19-dev clang-19 \
             glslang-tools \
@@ -31,22 +29,23 @@ jobs:
             libxshmfence-dev \
             libwayland-dev \
             libexpat1-dev \
-            python3-pip \
+            python3-pip libxcb-dri2-0-dev \
             libglvnd-dev \
             libwayland-egl-backend-dev \
-            libvulkan-dev libpolly-19-dev
+            libvulkan-dev libpolly-19-dev \
+            libvdpau-dev libxfixes-dev
           pip3 install --user meson ninja mako
       - name: 克隆 Mesa 源码
         run: |
-          git clone https://github.com/lfdevs/mesa-for-android-container.git
-          cd mesa-for-android-container
-          git checkout adreno-main
+          git clone https://gitlab.freedesktop.org/mesa/mesa.git
+          cd mesa
+          git checkout 16f4b93cac
       - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）
         run: |
-          cd mesa-for-android-container
+          cd mesa
           mkdir -p build
-           meson setup build \
-            --prefix=/opt/mesa \
+          meson setup build \
+            -Dprefix=/opt/mesa \
             -Dbuildtype=release \
             -Doptimization=3 \
             -Db_lto=true \
@@ -79,19 +78,21 @@ jobs:
             -Dmediafoundation-codecs=all \
             -Dgbm=enabled \
             -Dtools=drm-shim,freedreno
+
+
           
           
       - name: 编译 Mesa
         run: |
-          cd mesa-for-android-container
+          cd mesa
           ninja -C build -j$(nproc)
       - name: 安装到 DESTDIR（安全可复现）
         run: |
-          cd mesa-for-android-container
+          cd mesa
           DESTDIR=$PWD/package meson install -C build
       - name: 打包产物
         run: |
-          cd mesa-for-android-container
+          cd mesa
           VERSION=$(cat VERSION)
           GIT_HASH=$(git rev-parse --short HEAD)
           tar -czvf mesa-${VERSION}-aarch64.tar.gz -C package opt
