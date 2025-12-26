@@ -45,7 +45,7 @@ jobs:
         run: |
           cd mesa-for-android-container
           mkdir -p build
-           meson setup builddir \
+           meson setup build \
             --prefix=/opt/mesa \
             -Dbuildtype=release \
             -Doptimization=3 \
