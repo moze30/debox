@@ -46,6 +46,7 @@ jobs:
           mkdir -p build
           meson setup build \
           --prefix=/opt/mesa \
+          -Dbuildtype=release \
           -Doptimization=3 \
           -Db_lto=true \
           -Dplatforms=x11 \
@@ -62,7 +63,12 @@ jobs:
           -Dllvm=enabled \
           -Dshared-llvm=disabled \
           -Dlegacy-x11=dri2 \
-
+          -Dgbm=enabled \
+          -Dgallium-d3d12-video=enabled \
+          -Dlibunwind=disabled \
+          -Dvalgrind=disabled \
+          -Dmicrosoft-clc=disabled \
+          -Dgallium-rusticl=false
 
           
           
