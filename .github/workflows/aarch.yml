@@ -66,7 +66,6 @@ jobs:
             -Dgallium-extra-hud=true \
             -Dgallium-drivers=zink,freedreno,llvmpipe,softpipe \
             -Dgallium-rusticl-enable-drivers=freedreno \
-            -Dshader-cache-default=true \
             -Dvulkan-drivers=freedreno,swrast \
             -Dfreedreno-kmds=msm,kgsl \
             -Dgbm=enabled \
