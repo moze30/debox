@@ -61,7 +61,7 @@ jobs:
           -Degl=enabled \
           -Dglvnd=disabled \
           -Dllvm=enabled \
-          -Dshared-llvm=disabled \
+          -Dshared-llvm=enabled \
           -Dlegacy-x11=dri2 \
           -Dgbm=enabled \
           -Dgallium-d3d12-video=enabled \
