@@ -44,7 +44,8 @@ jobs:
         run: |
           cd mesa
           mkdir -p build
-          meson setup build \
+           meson setup build \
+            --libdir=lib \
             -Dprefix=/opt/mesa \
             -Dbuildtype=release \
             -Doptimization=3 \
@@ -56,6 +57,7 @@ jobs:
             -Dopengl=true \
             -Dgles1=enabled \
             -Dgles2=enabled \
+            -Dglvnd=disabled \
             -Degl=enabled \
             -Dllvm=enabled \
             -Dshared-llvm=enabled \
@@ -63,12 +65,20 @@ jobs:
             -Dshared-glapi=enabled \
             -Dxlib-lease=enabled \
             -Dvulkan-beta=true \
+            -Dlibunwind=disabled \
+            -Dvalgrind=disabled \
+            -Dmicrosoft-clc=disabled \
+            -Dgallium-rusticl=false \
             -Dgallium-extra-hud=true \
-            -Dgallium-drivers=zink,freedreno,llvmpipe,softpipe \
+            -Dgallium-drivers=zink \
             -Dgallium-rusticl-enable-drivers=freedreno \
-            -Dvulkan-drivers=freedreno,swrast \
+            -Dshader-cache-default=true \
+            -Dvulkan-drivers=freedreno \
             -Dfreedreno-kmds=msm,kgsl \
+            -Dvideo-codecs=all \
+            -Dmediafoundation-codecs=all \
             -Dgbm=enabled \
+            -Dtools=drm-shim,freedreno
 
 
           
