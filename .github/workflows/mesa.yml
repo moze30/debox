@@ -51,8 +51,8 @@ jobs:
           -Db_lto=true \
           -Dplatforms=x11 \
           -Degl-native-platform=x11 \
-          -Dgallium-drivers=zink \
-          -Dvulkan-drivers=freedreno \
+          -Dgallium-drivers=zink,freedreno,llvmpipe,softpipe \
+          -Dvulkan-drivers=freedreno,swrast \
           -Dfreedreno-kmds=msm,kgsl \
           -Dgles1=enabled \
           -Dgles2=enabled \
