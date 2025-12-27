@@ -45,31 +45,25 @@ jobs:
           cd mesa
           mkdir -p build
           meson setup build \
-          --prefix=/opt/mesa \
-          -Dbuildtype=release \
-          -Doptimization=3 \
-          -Db_lto=true \
-          -Dplatforms=x11 \
-          -Degl-native-platform=x11 \
-          -Dgallium-drivers=zink,freedreno,llvmpipe,softpipe \
-          -Dvulkan-drivers=freedreno,swrast \
-          -Dfreedreno-kmds=msm,kgsl \
-          -Dgles1=enabled \
-          -Dgles2=enabled \
-          -Dopengl=true \
-          -Dglx=dri \
-          -Degl=enabled \
-          -Dglvnd=disabled \
-          -Dllvm=enabled \
-          -Dshared-llvm=enabled \
-          -Dlegacy-x11=dri2 \
-          -Dgbm=enabled \
-          -Dgallium-d3d12-video=enabled \
-          -Dlibunwind=disabled \
-          -Dvalgrind=disabled \
-          -Dmicrosoft-clc=disabled \
-          -Dgallium-rusticl=true \
-          -Dgallium-nine=true
+            -Dprefix=/opt/mesa/ \
+            -Dplatforms=x11 \
+            -Dopengl=true \
+            -Dglx=dri \
+            -Dglx-direct=true \
+            -Dglvnd=enabled \
+            -Dgbm=enabled \
+            -Dllvm=disabled \
+            -Dshared-llvm=disabled \
+            -Dxlib-lease=enabled \
+            -Dvulkan-beta=true \
+            -Dgallium-drivers=zink,freedreno \
+            -Dvulkan-drivers=freedreno \
+            -Dfreedreno-kmds=msm,kgsl \
+            -Dvideo-codecs=all \
+            -Dtools=drm-shim,freedreno \
+            -Ddefault_library=shared \
+            -Db_lto=true \
+            -Dstrip=true
 
           
           
