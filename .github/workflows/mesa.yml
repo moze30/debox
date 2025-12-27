@@ -55,8 +55,7 @@ jobs:
             -Dllvm=disabled \
             -Dshared-llvm=disabled \
             -Dxlib-lease=enabled \
-            -Dvulkan-beta=true \
-            -Dgallium-drivers=zink,freedreno \
+            -Dgallium-drivers=zink \
             -Dvulkan-drivers=freedreno \
             -Dfreedreno-kmds=msm,kgsl \
             -Dvideo-codecs=all \
