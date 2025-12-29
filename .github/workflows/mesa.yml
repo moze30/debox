@@ -56,7 +56,7 @@ jobs:
             -Dlibunwind=disabled \
             -Dmicrosoft-clc=disabled \
             -Dvalgrind=disabled \
-            -Dgles1=disabled \
+            -Dgles1=enabled \
             -Dfreedreno-kmds=kgsl \
             -Dbuildtype=release \
             -Dgallium-nine=true
