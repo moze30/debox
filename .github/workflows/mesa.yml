@@ -58,7 +58,8 @@ jobs:
             -Dvalgrind=disabled \
             -Dgles1=disabled \
             -Dfreedreno-kmds=kgsl \
-            -Dbuildtype=release
+            -Dbuildtype=release \
+            -Dgallium-nine=true
 
           
           
