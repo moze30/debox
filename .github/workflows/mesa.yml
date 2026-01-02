@@ -44,23 +44,21 @@ jobs:
         run: |
           cd mesa
           mkdir -p build
-          meson setup build/ \
-          --prefix=/opt/mesa \
-          -Dplatforms=x11,wayland \
-          -Degl-native-platform=x11 \
-          -Dgallium-drivers=freedreno,zink,virgl \
-          -Dvulkan-drivers=freedreno \
-          -Degl=enabled \
-          -Dgles2=disabled \
-          -Dglvnd=disabled \
-          -Dllvm=disabled \
-          -Dglx=dri \
-          -Dlibunwind=disabled \
-          -Dmicrosoft-clc=disabled \
-          -Dvalgrind=disabled \
-          -Dgles1=disabled \
-          -Dfreedreno-kmds=kgsl \
-          -Dbuildtype=release
+          meson setup build \
+             --prefix=/opt/mesa \
+             -Dplatforms=x11,wayland \
+             -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
+             -Dvulkan-drivers=freedreno \
+             -Degl=enabled \
+             -Dgles2=enabled \
+             -Dglvnd=enabled \
+             -Dglx=dri \
+             -Dlibunwind=disabled \
+             -Dmicrosoft-clc=disabled \
+             -Dvalgrind=disabled \
+             -Dgles1=enabled \
+             -Dfreedreno-kmds=kgsl \
+             -Dbuildtype=release
 
           
           
