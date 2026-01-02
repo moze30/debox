@@ -48,7 +48,6 @@ jobs:
              --prefix=/opt/mesa \
              -Dbuildtype=release \
              -Dplatforms=x11,wayland \
-             -Degl-native-platform=x11 \
              -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
              -Dgallium-va=enabled \
              -Dstatic-libclc=all \
