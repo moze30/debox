@@ -51,7 +51,6 @@ jobs:
              -Degl-native-platform=x11 \
              -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
              -Dgallium-va=enabled \
-             -Dgallium-mediafoundation=enabled \
              -Dgallium-rusticl=true \
              -Dgallium-rusticl-enable-drivers=freedreno \
              -Dstatic-libclc=all \
