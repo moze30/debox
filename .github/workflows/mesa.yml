@@ -33,7 +33,7 @@ jobs:
             libglvnd-dev \
             libwayland-egl-backend-dev \
             libvulkan-dev libpolly-19-dev \
-            libvdpau-dev libxfixes-dev libva-dev librust-bindgen-dev
+            libvdpau-dev libxfixes-dev libva-dev
           pip3 install --user meson ninja mako
       - name: 克隆 Mesa 源码
         run: |
@@ -51,8 +51,6 @@ jobs:
              -Degl-native-platform=x11 \
              -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
              -Dgallium-va=enabled \
-             -Dgallium-rusticl=true \
-             -Dgallium-rusticl-enable-drivers=freedreno \
              -Dstatic-libclc=all \
              -Dvulkan-drivers=freedreno \
              -Dfreedreno-kmds=kgsl,msm \
