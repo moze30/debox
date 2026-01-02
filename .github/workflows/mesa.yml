@@ -46,19 +46,31 @@ jobs:
           mkdir -p build
           meson setup build \
              --prefix=/opt/mesa \
+             -Dbuildtype=release \
              -Dplatforms=x11,wayland \
+             -Degl-native-platform=x11 \
              -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
+             -Dgallium-va=enabled \
+             -Dgallium-mediafoundation=enabled \
+             -Dgallium-rusticl=true \
+             -Dgallium-rusticl-enable-drivers=freedreno \
+             -Dstatic-libclc=all \
              -Dvulkan-drivers=freedreno \
-             -Degl=enabled \
-             -Dgles2=enabled \
-             -Dglvnd=enabled \
-             -Dglx=dri \
-             -Dlibunwind=disabled \
-             -Dmicrosoft-clc=disabled \
-             -Dvalgrind=disabled \
+             -Dfreedreno-kmds=kgsl,msm \
+             -Dshader-cache=enabled \
              -Dgles1=enabled \
-             -Dfreedreno-kmds=kgsl \
-             -Dbuildtype=release
+             -Dgles2=enabled \
+             -Dopengl=true \
+             -Dgbm=enabled \
+             -Dglx=dri \
+             -Degl=enabled \
+             -Dglvnd=enabled \
+             -Dspirv-to-dxil=true \
+             -Dllvm=enabled \
+             -Dshared-llvm=enabled \
+             -Dxlib-lease=enabled \
+             -Dglx-direct=true \
+             -Dvideo-codecs=all
 
           
           
