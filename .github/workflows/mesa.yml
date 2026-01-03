@@ -47,8 +47,8 @@ jobs:
           meson setup build \
            --prefix=/opt/mesa \
            -Dplatforms=x11,wayland \
-           -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
-           -Dvulkan-drivers=freedreno \
+           -Dgallium-drivers=all \
+           -Dvulkan-drivers=all \
            -Degl=enabled \
            -Dgles2=enabled \
            -Dglvnd=enabled \
