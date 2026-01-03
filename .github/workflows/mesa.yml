@@ -64,8 +64,7 @@ jobs:
            -Dvulkan-beta=true \
            -Dzlib=enabled \
            -Dzstd=enabled \
-           -Dshader-cache=enabled \
-           -Degl-native-platform=drm
+           -Dshader-cache=enabled
            
 
            
