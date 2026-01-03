@@ -66,7 +66,8 @@ jobs:
            -Dzstd=enabled \
            -Dshader-cache=enabled \
            -Dgallium-va=disabled \
-           -Dgallium-vdpau=disabled 
+           -Dgallium-vdpau=disabled \
+           -Dshader-cache-max-size=4096M
            
 
            
