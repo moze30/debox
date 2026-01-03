@@ -60,7 +60,7 @@ jobs:
            -Dfreedreno-kmds=kgsl \
            -Dbuildtype=release \
            -Dllvm=enabled \
-           -Dshared-llvm=enabled \
+           -Dshared-llvm=disabled \
            -Dvulkan-beta=true \
            -Dzlib=enabled \
            -Dzstd=enabled \
