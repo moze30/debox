@@ -39,7 +39,7 @@ jobs:
         run: |
           git clone https://gitlab.freedesktop.org/mesa/mesa.git
           cd mesa
-          git checkout tags/mesa-25.3.3
+          git checkout main
       - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）
         run: |
           cd mesa
@@ -67,7 +67,7 @@ jobs:
            -Dshader-cache=enabled \
            -Dgallium-va=disabled \
            -Dgallium-vdpau=disabled \
-           -Dshader-cache-max-size=4096M
+           -Degl-native-platform=surfaceless
            
 
            
