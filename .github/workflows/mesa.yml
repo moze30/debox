@@ -48,7 +48,7 @@ jobs:
            --prefix=/opt/mesa \
            -Dplatforms=x11 \
            -Dbuildtype=release \
-           -Degl-native-platform \
+           -Degl-native-platform=x11 \
            -Dgallium-drivers=freedreno,zink \
            -Dgallium-va=enabled \
            -Dgallium-mediafoundation=enabled \
