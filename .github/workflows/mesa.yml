@@ -65,7 +65,7 @@ jobs:
            -Dzlib=enabled \
            -Dzstd=enabled \
            -Dshader-cache=enabled \
-           -Degl-native-platform=surfaceless
+           -Degl-native-platform=drm
            
 
            
