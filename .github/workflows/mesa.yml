@@ -66,8 +66,7 @@ jobs:
            -Dzstd=enabled \
            -Dshader-cache=enabled \
            -Dgallium-va=disabled \
-           -Dgallium-vdpau=disabled \
-           -Dvideo-codecs=disabled \
+           -Dgallium-vdpau=disabled 
            
 
            
