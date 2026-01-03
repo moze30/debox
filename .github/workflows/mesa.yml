@@ -65,8 +65,6 @@ jobs:
            -Dzlib=enabled \
            -Dzstd=enabled \
            -Dshader-cache=enabled \
-           -Dgallium-va=disabled \
-           -Dgallium-vdpau=disabled \
            -Degl-native-platform=surfaceless
            
 
