@@ -45,29 +45,20 @@ jobs:
           cd mesa
           mkdir -p build
           meson setup build \
-             --prefix=/opt/mesa \
-             -Dbuildtype=release \
-             -Dplatforms=x11,wayland \
-             -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
-             -Dgallium-va=enabled \
-             -Dstatic-libclc=all \
-             -Dvulkan-drivers=freedreno \
-             -Dfreedreno-kmds=kgsl,msm \
-             -Dshader-cache=enabled \
-             -Dgles1=enabled \
-             -Dgles2=enabled \
-             -Dopengl=true \
-             -Dgbm=enabled \
-             -Dglx=dri \
-             -Degl=enabled \
-             -Dglvnd=enabled \
-             -Dspirv-to-dxil=true \
-             -Dllvm=enabled \
-             -Dshared-llvm=enabled \
-             -Dxlib-lease=enabled \
-             -Dglx-direct=true \
-             -Dvideo-codecs=all \
-             -Dvulkan-beta=true
+           --prefix=/opt/mesa \
+           -Dplatforms=x11,wayland \
+           -Dgallium-drivers=freedreno,zink,virgl,llvmpipe \
+           -Dvulkan-drivers=freedreno \
+           -Degl=enabled \
+           -Dgles2=enabled \
+           -Dglvnd=enabled \
+           -Dglx=dri \
+           -Dlibunwind=disabled \
+           -Dmicrosoft-clc=disabled \
+           -Dvalgrind=disabled \
+           -Dgles1=disabled \
+           -Dfreedreno-kmds=kgsl \
+           -Dbuildtype=release
 
           
           
