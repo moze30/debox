@@ -56,9 +56,16 @@ jobs:
            -Dlibunwind=disabled \
            -Dmicrosoft-clc=disabled \
            -Dvalgrind=disabled \
-           -Dgles1=disabled \
+           -Dgles1=enabled \
            -Dfreedreno-kmds=kgsl \
-           -Dbuildtype=release
+           -Dbuildtype=release \
+           -Dllvm=enabled \
+           -Dshared-llvm=enabled \
+           -Dvulkan-beta=true \
+           -Dzlib=enabled \
+           -Dzstd=enabled \
+           -Dshader-cache=enabled
+           
 
           
           
