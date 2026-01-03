@@ -50,7 +50,6 @@ jobs:
            -Dbuildtype=release \
            -Degl-native-platform=x11 \
            -Dgallium-drivers=freedreno,zink \
-           -Dgallium-va=enabled \
            -Dgallium-mediafoundation=enabled \
            -Dmediafoundation-codecs=all \
            -Dvulkan-drivers=freedreno \
