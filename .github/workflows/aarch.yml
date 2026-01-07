@@ -39,7 +39,7 @@ jobs:
         run: |
           git clone https://gitlab.freedesktop.org/mesa/mesa.git
           cd mesa
-          git checkout 07f8729361c
+          git checkout 3533853566e
       - name: 配置 Mesa（X11 + Vulkan + Zink + Freedreno）
         run: |
           cd mesa
