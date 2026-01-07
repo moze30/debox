@@ -47,25 +47,27 @@ jobs:
           meson setup build \
            --prefix=/opt/mesa \
            -Dplatforms=x11 \
-           -Dbuildtype=release \
-           -Degl-native-platform=x11 \
            -Dgallium-drivers=freedreno,zink \
-           -Dmediafoundation-codecs=all \
            -Dvulkan-drivers=freedreno \
-           -Dfreedreno-kmds=kgsl \
-           -Dshader-cache=enabled \
-           -Dgles1=enabled \
-           -Dgles2=enabled \
-           -Dopengl=true \
-           -Dgbm=enabled \
-           -Dglx=dri \
            -Degl=enabled \
-           -Dglvnd=enabled \
+           -Dgles2=enabled \
+           -Dglvnd=disabled \
+           -Dglx=dri \
+           -Dlibunwind=disabled \
            -Dmicrosoft-clc=disabled \
+           -Dvalgrind=disabled \
+           -Dgles1=enabled \
+           -Dfreedreno-kmds=kgsl \
+           -Dbuildtype=release \
            -Dllvm=enabled \
-           -Dshared-llvm=enabled \
+           -Dshared-llvm=disabled \
            -Dvulkan-beta=true \
-           -Dvideo-codecs=all
+           -Dzlib=enabled \
+           -Dzstd=enabled \
+           -Dshader-cache=enabled
+           
+           
+          
           
       - name: 编译 Mesa
         run: |
