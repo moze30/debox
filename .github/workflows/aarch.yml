@@ -1,4 +1,4 @@
-name: Mesa
+name: 复现
 
 on:
   workflow_dispatch:
@@ -33,7 +33,7 @@ jobs:
             libglvnd-dev \
             libwayland-egl-backend-dev \
             libvulkan-dev libpolly-19-dev \
-            libvdpau-dev libxfixes-dev
+            libvdpau-dev libxfixes-dev libva-dev
           pip3 install --user meson ninja mako
       - name: 克隆 Mesa 源码
         run: |
@@ -44,36 +44,28 @@ jobs:
         run: |
           cd mesa
           mkdir -p build
-           meson setup build \
-            --libdir=lib \
-            -Dprefix=/opt/mesa \
-            -Doptimization=3 \
-            -Db_lto=true \
-            -Dplatforms=x11 \
-            -Degl-native-platform=x11 \
-            -Dglx=dri \
-            -Dglx-direct=true \
-            -Dopengl=true \
-            -Dgles1=enabled \
-            -Dgles2=enabled \
-            -Dglvnd=disabled \
-            -Degl=enabled \
-            -Dllvm=enabled \
-            -Dshared-llvm=enabled \
-            -Dshader-cache=enabled \
-            -Dshared-glapi=enabled \
-            -Dgallium-extra-hud=true \
-            -Dgallium-drivers=zink \
-            -Dgallium-rusticl-enable-drivers=freedreno \
-            -Dshader-cache-default=true \
-            -Dvulkan-drivers=freedreno \
-            -Dfreedreno-kmds=msm,kgsl \
-            -Dvideo-codecs=all \
-            -Dmediafoundation-codecs=all \
-            -Dgbm=enabled \
-
-
-          
+          meson setup build \
+           --prefix=/opt/mesa \
+           -Dplatforms=x11 \
+           -Dbuildtype=release \
+           -Degl-native-platform=x11 \
+           -Dgallium-drivers=freedreno,zink \
+           -Dmediafoundation-codecs=all \
+           -Dvulkan-drivers=freedreno \
+           -Dfreedreno-kmds=kgsl \
+           -Dshader-cache=enabled \
+           -Dgles1=enabled \
+           -Dgles2=enabled \
+           -Dopengl=true \
+           -Dgbm=enabled \
+           -Dglx=dri \
+           -Degl=enabled \
+           -Dglvnd=enabled \
+           -Dmicrosoft-clc=disabled \
+           -Dllvm=enabled \
+           -Dshared-llvm=enabled \
+           -Dvulkan-beta=true \
+           -Dvideo-codecs=all
           
       - name: 编译 Mesa
         run: |
