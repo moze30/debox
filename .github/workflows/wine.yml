@@ -14,7 +14,7 @@ jobs:
     - name: 安装 Wine 编译依赖
       run: |
         sudo apt update
-
+        sudo apt --fix-broken install -y
         sudo dpkg --add-architecture i386
         sudo apt update
 
