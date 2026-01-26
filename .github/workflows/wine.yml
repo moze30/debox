@@ -1,127 +1,111 @@
-name: 编译 Wine WOW64（Wine 11）
+name: 编译 Wine WOW64（官方双构建，稳定版）
 
 on:
   workflow_dispatch:
 
+env:
+  WINE_VERSION: wine-11.0
+  WINE_PREFIX: /opt/wine-wow64
+
 jobs:
-  build-wine-wow64:
+  build-wow64:
+    name: 编译 WOW64 Wine
     runs-on: ubuntu-24.04
+    timeout-minutes: 180
 
     steps:
-    - name: 拉取仓库
-      uses: actions/checkout@v4
+      - name: 拉取仓库
+        uses: actions/checkout@v4
 
-    - name: 安装 Wine 编译依赖
-      run: |
-        sudo dpkg --add-architecture i386
-        sudo apt update
-        sudo apt --fix-broken install -y
+      - name: 安装编译依赖
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
 
-        sudo apt install -y \
-          build-essential \
-          gcc-multilib g++-multilib \
-          flex bison \
-          git \
-          autoconf automake libtool \
-          pkg-config \
-          gettext \
-          libx11-dev libx11-dev:i386 \
-          libxext-dev libxext-dev:i386 \
-          libxrandr-dev libxrandr-dev:i386 \
-          libxinerama-dev libxinerama-dev:i386 \
-          libxcursor-dev libxcursor-dev:i386 \
-          libxi-dev libxi-dev:i386 \
-          libxcomposite-dev libxcomposite-dev:i386 \
-          libxdamage-dev libxdamage-dev:i386 \
-          libxfixes-dev libxfixes-dev:i386 \
-          libfreetype6-dev libfreetype6-dev:i386 \
-          libfontconfig1-dev libfontconfig1-dev:i386 \
-          libgl-dev libgl-dev:i386 \
-          libasound2-dev libasound2-dev:i386 \
-          libpulse-dev libpulse-dev:i386 \
-          libdbus-1-dev libdbus-1-dev:i386 \
-          libudev-dev libudev-dev:i386 \
-          libgstreamer1.0-dev \
-          libgstreamer-plugins-base1.0-dev \
-          libvulkan-dev libvulkan-dev:i386 \
-          mingw-w64 \
-          ca-certificates \
-          wget xz-utils \
-          locales
+          sudo apt install -y \
+            build-essential \
+            git \
+            pkg-config \
+            autoconf \
+            bison \
+            flex \
+            gettext \
+            gcc-multilib \
+            g++-multilib \
+            libx11-dev libx11-dev:i386 \
+            libxext-dev libxext-dev:i386 \
+            libxinerama-dev libxinerama-dev:i386 \
+            libxcursor-dev libxcursor-dev:i386 \
+            libxrender-dev libxrender-dev:i386 \
+            libxrandr-dev libxrandr-dev:i386 \
+            libxi-dev libxi-dev:i386 \
+            libfreetype-dev libfreetype-dev:i386 \
+            libfontconfig1-dev libfontconfig1-dev:i386 \
+            libgl-dev libgl-dev:i386 \
+            libvulkan-dev libvulkan-dev:i386 \
+            libpulse-dev libpulse-dev:i386 \
+            libasound2-dev libasound2-dev:i386 \
+            libdbus-1-dev libdbus-1-dev:i386 \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
+            libgstreamer1.0-dev:i386 \
+            libgstreamer-plugins-base1.0-dev:i386 \
+            mingw-w64 \
+            python3
 
-    - name: 设置中文语言环境
-      run: |
-        sudo locale-gen zh_CN.UTF-8
-        sudo update-locale LANG=zh_CN.UTF-8
-        export LANG=zh_CN.UTF-8
-        export LC_ALL=zh_CN.UTF-8
+      - name: 克隆 Wine 源码
+        run: |
+          git clone https://github.com/wine-mirror/wine.git
+          cd wine
+          git checkout ${WINE_VERSION}
 
-    - name: 克隆 Wine 源码
-      run: |
-        git clone https://github.com/wine-mirror/wine.git
-        cd wine
-        git checkout wine-11.0
+      - name: 构建 32 位 Wine（WOW64 基础）
+        run: |
+          set -e
+          cd wine
+          mkdir build32
+          cd build32
 
-    - name: 修复 Termux /tmp 路径
-      run: |
-        cd wine
-        find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.in" -o -name "*.spec" \) \
-          -exec grep -l "/tmp" {} \; | xargs sed -i 's|/tmp/|/data/data/com.termux/files/usr/tmp/|g'
-        find server -type f \( -name "*.c" -o -name "*.h" \) \
-          -exec sed -i 's|"/tmp"|"/data/data/com.termux/files/usr/tmp"|g' {} +
-        find . -name "file.c" -exec sed -i 's|"/tmp"|"/data/data/com.termux/files/usr/tmp"|g' {} +
-        find . -name "loader.c" -exec sed -i 's|"/tmp"|"/data/data/com.termux/files/usr/tmp"|g' {} +
-        find . -name "server.c" -exec sed -i 's|"/tmp"|"/data/data/com.termux/files/usr/tmp"|g' {} +
+          ../configure \
+            --prefix=${WINE_PREFIX} \
+            --enable-win32 \
+            --disable-tests
 
-    - name: 配置 Wine WOW64 构建
-      run: |
-        cd wine
-        mkdir -p build-wow64
-        cd build-wow64
+          make -j$(nproc)
+          make install
 
-        export CROSSCC="x86_64-w64-mingw32-gcc"
-        export CROSSCXX="x86_64-w64-mingw32-g++"
-        export CFLAGS="-march=x86-64 -msse3 -mfpmath=sse -O3 -pipe"
-        export CXXFLAGS="-march=x86-64 -msse3 -mfpmath=sse -O3 -pipe"
-        export CROSSCFLAGS="$CFLAGS"
-        export CROSSCXXFLAGS="$CXXFLAGS"
+      - name: 构建 64 位 Wine（WOW64 主体）
+        run: |
+          set -e
+          cd wine
+          mkdir build64
+          cd build64
 
-        ../configure \
-          --enable-win64 \
-          --enable-archs=i386,x86_64 \
-          --disable-tests \
-          --disable-winemenubuilder \
-          --without-dbus \
-          --without-cups \
-          --without-sane \
-          --without-oss \
-          --without-coreaudio \
-          --without-wayland \
-          --prefix=/opt/wine-wow64
+          ../configure \
+            --prefix=${WINE_PREFIX} \
+            --enable-win64 \
+            --with-wine32=../build32 \
+            --disable-tests
 
-    - name: 编译 Wine
-      run: |
-        cd wine/build-wow64
-        make -j$(nproc) V=1
+          make -j$(nproc)
+          make install
 
-    - name: 安全安装 Wine（DESTDIR）
-      run: |
-        cd wine/build-wow64
-        mkdir -p package
-        make install DESTDIR=$PWD/package
+      - name: 验证 Wine 是否真实生成（关键）
+        run: |
+          ls -lh ${WINE_PREFIX}/bin
+          file ${WINE_PREFIX}/bin/wine
+          file ${WINE_PREFIX}/bin/wineserver
+          ${WINE_PREFIX}/bin/wine --version || true
 
-    - name: 查看安装结果
-      run: |
-        cd wine/build-wow64
-        find package | head -50
+      - name: 打包 Wine WOW64
+        run: |
+          mkdir -p package
+          cp -r ${WINE_PREFIX} package/wine-wow64
+          tar -cJf wine-wow64.tar.xz -C package wine-wow64
+          ls -lh wine-wow64.tar.xz
 
-    - name: 打包 Wine WOW64
-      run: |
-        cd wine/build-wow64/package
-        tar -cJf wine-wow64.tar.xz *
-
-    - name: 上传编译产物
-      uses: actions/upload-artifact@v4
-      with:
-        name: wine-wow64
-        path: wine/build-wow64/package/wine-wow64.tar.xz
+      - name: 上传编译产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: wine-wow64
+          path: wine-wow64.tar.xz
