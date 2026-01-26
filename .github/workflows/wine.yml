@@ -1,109 +1,133 @@
-name: 编译 Wine WOW64（官方双构建，稳定版）
+name: 编译 Wine WOW64（Wine 11 + GStreamer）
 
 on:
   workflow_dispatch:
 
-env:
-  WINE_VERSION: wine-11.0
-  WINE_PREFIX: /opt/wine-wow64
-
 jobs:
-  build-wow64:
-    name: 编译 WOW64 Wine
+  build-wine-wow64:
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
 
     steps:
-      - name: 拉取仓库
-        uses: actions/checkout@v4
+    - name: 拉取仓库
+      uses: actions/checkout@v4
 
-      - name: 安装编译依赖
-        run: |
-          sudo dpkg --add-architecture i386
-          sudo apt update
+    - name: 启用 i386 架构
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt update
 
-          sudo apt install -y \
-            build-essential \
-            git \
-            pkg-config \
-            autoconf \
-            bison \
-            flex \
-            gettext \
-            gcc-multilib \
-            g++-multilib \
-            libx11-dev libx11-dev:i386 \
-            libxext-dev libxext-dev:i386 \
-            libxinerama-dev libxinerama-dev:i386 \
-            libxcursor-dev libxcursor-dev:i386 \
-            libxrender-dev libxrender-dev:i386 \
-            libxrandr-dev libxrandr-dev:i386 \
-            libxi-dev libxi-dev:i386 \
-            libfreetype-dev libfreetype-dev:i386 \
-            libfontconfig1-dev libfontconfig1-dev:i386 \
-            libgl-dev libgl-dev:i386 \
-            libvulkan-dev libvulkan-dev:i386 \
-            libpulse-dev libpulse-dev:i386 \
-            libasound2-dev libasound2-dev:i386 \
-            libdbus-1-dev libdbus-1-dev:i386 \
-            libgstreamer1.0-dev \
-            libgstreamer-plugins-base1.0-dev \
-            mingw-w64 \
-            python3
+    - name: 安装 Wine 编译依赖（含 GStreamer）
+      run: |
+        sudo apt install -y \
+          build-essential \
+          gcc-multilib g++-multilib \
+          flex bison \
+          git \
+          autoconf automake libtool \
+          pkg-config \
+          gettext \
+          \
+          libx11-dev libx11-dev:i386 \
+          libxext-dev libxext-dev:i386 \
+          libxrandr-dev libxrandr-dev:i386 \
+          libxinerama-dev libxinerama-dev:i386 \
+          libxcursor-dev libxcursor-dev:i386 \
+          libxi-dev libxi-dev:i386 \
+          libxcomposite-dev libxcomposite-dev:i386 \
+          libxdamage-dev libxdamage-dev:i386 \
+          libxfixes-dev libxfixes-dev:i386 \
+          \
+          libfreetype6-dev libfreetype6-dev:i386 \
+          libfontconfig1-dev libfontconfig1-dev:i386 \
+          libgl-dev libgl-dev:i386 \
+          \
+          libasound2-dev libasound2-dev:i386 \
+          libpulse-dev libpulse-dev:i386 \
+          libdbus-1-dev libdbus-1-dev:i386 \
+          libudev-dev libudev-dev:i386 \
+          libvulkan-dev libvulkan-dev:i386 \
+          \
+          libgstreamer1.0-dev \
+          libgstreamer-plugins-base1.0-dev \
+          gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good \
+          gstreamer1.0-plugins-bad \
+          gstreamer1.0-plugins-ugly \
+          gstreamer1.0-libav \
+          \
+          mingw-w64 \
+          ca-certificates \
+          wget xz-utils
 
-      - name: 克隆 Wine 源码
-        run: |
-          git clone https://github.com/wine-mirror/wine.git
-          cd wine
-          git checkout ${WINE_VERSION}
+    - name: 克隆 Wine 源码（Wine 11）
+      run: |
+        git clone https://github.com/wine-mirror/wine.git
+        cd wine
+        git checkout wine-11.0
 
-      - name: 构建 32 位 Wine（WOW64 基础）
-        run: |
-          set -e
-          cd wine
-          mkdir build32
-          cd build32
+    - name: 生成 configure 脚本
+      run: |
+        cd wine
+        ./tools/make_requests
+        autoreconf -fiv
 
-          ../configure \
-            --prefix=${WINE_PREFIX} \
-            --enable-win32 \
-            --disable-tests
+    # ===== 第 1 阶段：构建 wine64（不 install）=====
+    - name: 构建 wine64（第一阶段）
+      run: |
+        cd wine
+        mkdir build64
+        cd build64
 
-          make -j$(nproc)
-          make install
+        ../configure \
+          --enable-win64 \
+          --disable-tests \
+          --without-unwind \
+          --prefix=/opt/wine-wow64
 
-      - name: 构建 64 位 Wine（WOW64 主体）
-        run: |
-          set -e
-          cd wine
-          mkdir build64
-          cd build64
+        make -j$(nproc)
 
-          ../configure \
-            --prefix=${WINE_PREFIX} \
-            --enable-win64 \
-            --with-wine32=../build32 \
-            --disable-tests
+    # ===== 第 2 阶段：构建 wine32（WOW64 glue）=====
+    - name: 构建 wine32（WOW64 glue）
+      run: |
+        cd wine
+        mkdir build32
+        cd build32
 
-          make -j$(nproc)
-          make install
+        ../configure \
+          --disable-tests \
+          --without-unwind \
+          --with-wine64=../build64 \
+          --prefix=/opt/wine-wow64
 
-      - name: 验证 Wine 是否真实生成（关键）
-        run: |
-          ls -lh ${WINE_PREFIX}/bin
-          file ${WINE_PREFIX}/bin/wine
-          file ${WINE_PREFIX}/bin/wineserver
-          ${WINE_PREFIX}/bin/wine --version || true
+        make -j$(nproc)
 
-      - name: 打包 Wine WOW64
-        run: |
-          mkdir -p package
-          cp -r ${WINE_PREFIX} package/wine-wow64
-          tar -cJf wine-wow64.tar.xz -C package wine-wow64
-          ls -lh wine-wow64.tar.xz
+    # ===== 第 3 阶段：回到 wine64，生成最终工具 =====
+    - name: 完成 WOW64（回到 wine64）
+      run: |
+        cd wine/build64
+        make -j$(nproc)
 
-      - name: 上传编译产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: wine-wow64
-          path: wine-wow64.tar.xz
+    # ===== 安装（只 install 一次）=====
+    - name: 安装 Wine WOW64（DESTDIR）
+      run: |
+        cd wine/build64
+        make install DESTDIR=$PWD/package
+
+    - name: 检查关键产物
+      run: |
+        cd wine/build64/package
+        ls -l opt/wine-wow64/bin
+        file opt/wine-wow64/bin/wine
+        file opt/wine-wow64/bin/winecfg
+        file opt/wine-wow64/bin/wineserver
+
+    - name: 打包 Wine WOW64
+      run: |
+        cd wine/build64/package
+        tar -cJf wine-wow64.tar.xz opt
+
+    - name: 上传编译产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: wine-wow64
+        path: wine/build64/package/wine-wow64.tar.xz
