@@ -62,11 +62,6 @@ jobs:
         cd wine
         git checkout wine-11.0
 
-    - name: 生成 configure 脚本
-      run: |
-        cd wine
-        ./autogen.sh
-
     - name: 修复 Termux /tmp 路径
       run: |
         cd wine
