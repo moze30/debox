@@ -31,18 +31,13 @@ jobs:
             qemu-user-static \
             binfmt-support
 
-      - name: 启用 binfmt（多架构）
-        run: |
-          sudo update-binfmts --enable qemu-i386
-          sudo update-binfmts --enable qemu-x86_64
-
       - name: 克隆 Kron4ek Wine-Builds
         run: |
           git clone https://github.com/Kron4ek/Wine-Builds.git
           cd Wine-Builds
           git submodule update --init --recursive
 
-      - name: 准备 Ubuntu 构建 rootfs
+      - name: 创建 Ubuntu 构建 rootfs（一次即可）
         run: |
           cd Wine-Builds
           chmod +x create_ubuntu_bootstraps.sh
@@ -60,20 +55,19 @@ jobs:
       - name: 使用 Kron4ek 脚本构建 Proton WOW64
         env:
           WINE_SOURCE_DIR: ${{ github.workspace }}/Wine-Builds/sources/proton-wine
-          BUILD_PROTON: "1"
         run: |
           cd Wine-Builds
           chmod +x build_wine.sh
           sudo ./build_wine.sh
 
-      - name: 打包 Proton WOW64 构建产物
+      - name: 打包构建产物
         run: |
           cd Wine-Builds
           mkdir -p output
           cp -r builds/* output/
           tar -cJf proton-wow64.tar.xz output
 
-      - name: 上传构建产物
+      - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
           name: proton-wow64
