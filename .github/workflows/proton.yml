@@ -25,6 +25,7 @@ jobs:
           sudo tar -C /opt -xpf /opt/Bootstraps/bootstraps.tar.xz
           chmod +x build_wine.sh
           export WINE_BRANCH=proton
+          export EXPERIMENTAL_WOW64="true"
           export PROTON_TAG=proton-wine-10.0-1b
           ./build_wine.sh
           sha256sum *.tar.xz
