@@ -1,4 +1,4 @@
-name: Bootstraps CI
+name: Bootstraps-WOW64 CI
 
 on:
   schedule:
