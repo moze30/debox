@@ -1,0 +1,53 @@
+name: Build Proton Docker Image
+
+on:
+  workflow_dispatch:          # 允许手动触发
+  push:
+    branches: [ main ]        # 当推送到 main 分支时自动运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Proton source code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y make sed wget xz-utils bzip2
+
+      - name: Build Proton Docker image
+        working-directory: ./docker   # Makefile 在 docker 子目录中
+        run: |
+          # 只构建最终 proton 镜像（会自动依赖中间镜像）
+          make proton
+
+      - name: Determine final image name
+        id: image_name
+        working-directory: ./docker
+        run: |
+          # 从 Makefile 中提取版本信息，或直接通过 docker images 获取
+          # 方法1：从 Makefile 读取变量（需要确保格式正确）
+          STEAMRT_VERSION=$(grep -E '^STEAMRT_VERSION\s*=' Makefile | head -1 | sed 's/.*= *//')
+          PROTONSDK_VERSION="${STEAMRT_VERSION}-0-dev"
+          IMAGE="registry.gitlab.steamos.cloud/proton/sniper/sdk:${PROTONSDK_VERSION}"
+          echo "Final image: $IMAGE"
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+
+          # 方法2（备选）：直接查找最近生成的镜像（如果方法1失败）
+          # docker images --format "{{.Repository}}:{{.Tag}}" | grep "proton/sniper/sdk" | head -1
+
+      - name: Save image to tar.gz
+        run: |
+          IMAGE_NAME="${{ steps.image_name.outputs.image }}"
+          echo "Saving $IMAGE_NAME ..."
+          docker save "$IMAGE_NAME" | gzip > proton-image.tar.gz
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: proton-docker-image
+          path: proton-image.tar.gz
+          retention-days: 7    # 保留 7 天，可根据需要调整
