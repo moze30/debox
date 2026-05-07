@@ -1,0 +1,52 @@
+name: Build and Publish Debian Build Image
+
+on:
+  workflow_dispatch:          # 手动触发，方便测试
+  schedule:
+    - cron: '0 0 * * 0'      # 每周日 UTC 0 点自动构建（按需修改）
+
+permissions:
+  contents: write             # 必需：创建 Release 和上传资产
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 1. 生成 Dockerfile（也可用仓库中的固定文件）
+      - name: Create Dockerfile
+        run: |
+          cat > Dockerfile.build << 'EOF'
+          FROM debian:bookworm   # 建议用固定代号，保证环境一致
+          RUN apt-get update && apt-get install -y \
+              build-essential \
+              cmake \
+              git \
+              curl \
+              && rm -rf /var/lib/apt/lists/*
+          # 根据项目需要添加更多包
+          EOF
+
+      # 2. 构建镜像
+      - name: Build Docker image
+        run: |
+          docker build -t debian-build:latest -f Dockerfile.build .
+
+      # 3. 导出镜像为压缩包
+      - name: Export and compress image
+        run: |
+          docker save debian-build:latest | gzip > debian-build-image.tar.gz
+
+      # 4. 上传到 Release（固定 tag，每次更新该 Release 的资产）
+      - name: Upload to Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: debian-build-image                # 固定的 Git 标签
+          name: "Debian Build Image"
+          body: "预装编译工具的 Debian 镜像，每周自动更新。"
+          artifacts: "debian-build-image.tar.gz"
+          allowUpdates: true                     # 更新已有 Release，不创建新的
+          makeLatest: false                      # 不标记为最新 Release（若需要可改为 true）
+          token: ${{ secrets.GITHUB_TOKEN }}
